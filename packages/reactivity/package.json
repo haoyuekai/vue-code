@@ -1,0 +1,24 @@
+{
+  "name": "@vue/reactivity",
+  "version": "1.0.0",
+  "description": "响应式模块",
+  "main": "index.js",
+  "module": "dist/reactivity.esm.js",
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "sideEffects": false,
+  "buildOptions": {
+    "name": "MiniVueReactivity",
+    "formats": [
+      "cjs",
+      "esm-bundler",
+      "esm-browser",
+      "global"
+    ]
+  },
+  "dependencies": {
+    "@vue/shared": "workspace:^"
+  }
+}

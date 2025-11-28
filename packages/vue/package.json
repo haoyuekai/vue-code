@@ -1,0 +1,20 @@
+{
+  "name": "mini-vue",
+  "version": "1.0.0",
+  "description": "vue核心库",
+  "main": "index.js",
+  "module": "dist/vue.esm.js",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "buildOptions": {
+    "name": "MiniVueReactivity",
+    "formats": [
+      "cjs",
+      "esm-bundler",
+      "esm-browser",
+      "global"
+    ]
+  }
+}
