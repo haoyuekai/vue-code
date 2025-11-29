@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <div class="a"></div>
+        <div class="b"></div>
+        <div class="c"></div>
+        <div class="d"></div>
+    </div>
+
+    <script type="module">
+        import { ref, effect } from '../dist/reactivity.esm.js'
+
+        const count = ref(0)
+
+        const app = document.querySelector('#app')
+        // effect(() => {
+        //     setTimeout(() => {
+        //         effect(() => {
+        //             setTimeout(() => {
+        //                 effect(() => {
+        //                     setTimeout(() => {
+        //                         console.log(4)
+        //                         app.querySelector('.d').innerText = `count4 is: ${count.value}`
+        //                     }, 1000);
+        //                     console.log(3)
+        //                     app.querySelector('.c').innerText = `count3 is: ${count.value}`
+        //                 })
+        //             }, 1000);
+        //             console.log(2)
+        //             app.querySelector('.b').innerText = `count2 is: ${count.value}`
+        //         })
+        //     }, 1000);
+        //     console.log(1)
+        //     app.querySelector('.a').innerText = `count1 is: ${count.value}`
+        // })
+        const runner = effect(() => {
+            console.log(1)
+            app.querySelector('.a').innerText = `count1 is: ${count.value}`
+            return 'hello'
+        }, {
+            scheduler() {
+                const res = runner();
+                console.log('schedule 1', res);
+            }
+        })
+
+
+        setTimeout(() => {
+            count.value = 1
+        }, 1000);
+    </script>
+</body>
+
+</html>

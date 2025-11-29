@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <button id="btn">click</button>
+    </div>
+
+    <script type="module">
+        import { ref, effect } from '../dist/reactivity.esm.js'
+
+        const flag = ref(true)
+        const count = ref(0)
+        const e = effect(() => {
+            flag.value
+            count.value
+            console.log(1)
+        })
+
+        console.dir(e)
+
+        btn.onclick = () => {
+            count.value++
+            // flag.value = !flag.value
+            // console.log(flag)
+        }
+    </script>
+</body>
+
+</html>
