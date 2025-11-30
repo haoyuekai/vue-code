@@ -15,7 +15,7 @@
         import { ref, effect } from '../dist/reactivity.esm.js'
 
         const count = ref(0)
-
+        console.log(count)
         effect(() => {
             console.log(count.value++)
         })

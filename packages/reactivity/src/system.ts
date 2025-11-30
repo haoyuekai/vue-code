@@ -1,9 +1,7 @@
-import next from 'next';
-
 /**
  * 依赖项(ref computed等)
  */
-interface Dep {
+interface Dependency {
     // 依赖项链表的头结点
     subs: Link | undefined;
     // 依赖项链表的尾节点
@@ -29,7 +27,7 @@ export interface Link {
     nextSub: Link | undefined;
     prevSub: Link | undefined;
     // 依赖项
-    dep: Dep;
+    dep: Dependency;
     nextDep: Link | undefined;
 }
 
