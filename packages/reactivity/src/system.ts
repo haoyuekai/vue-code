@@ -1,3 +1,5 @@
+import next from 'next';
+
 /**
  * 依赖项(ref computed等)
  */
@@ -31,6 +33,8 @@ export interface Link {
     nextDep: Link | undefined;
 }
 
+let linkPool: Link;
+
 /**
  * 链接链表关系
  * @param dep
@@ -55,13 +59,25 @@ export function link(dep, sub) {
         return;
     }
 
-    const newLink = {
-        sub, // 当前节点的effect
-        dep, // dep指向当前节点关联的ref
-        nextDep, // 创建新节点时，nextDep指向之前创建（如果有）的节点，后面用来清理这个节点的关联关系
-        nextSub: undefined,
-        prevSub: undefined,
-    };
+    let newLink;
+    /**
+     * 判断linkPoll是否存在，决定是否复用
+     */
+    if (linkPool) {
+        newLink = linkPool;
+        linkPool = linkPool.nextDep;
+        newLink.sub = sub;
+        newLink.dep = dep;
+        newLink.nextDep = nextDep;
+    } else {
+        newLink = {
+            sub, // 当前节点的effect
+            dep, // dep指向当前节点关联的ref
+            nextDep, // 创建新节点时，nextDep指向之前创建（如果有）的节点，后面用来清理这个节点的关联关系
+            nextSub: undefined,
+            prevSub: undefined,
+        };
+    }
     /**
      * 将链表节点和dep(ref)建立关联关系(双向链表)
      * 关联链表关系，判断尾节点是否存在
@@ -172,7 +188,9 @@ export function clearTracking(link: Link) {
 
         link.dep = link.sub = undefined;
 
-        link.nextDep = undefined;
+        // 要清理的节点，使用linkPoll暂存，用以后面复用
+        link.nextDep = linkPool;
+        linkPool = link;
 
         link = nextDep;
     }
