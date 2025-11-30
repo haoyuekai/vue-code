@@ -117,7 +117,10 @@ export function propagate(subs) {
     let queuedEffect = [];
 
     while (link) {
-        queuedEffect.push(link.sub);
+        const sub = link.sub;
+        if (!sub.tracking) {
+            queuedEffect.push(link.sub);
+        }
         link = link.nextSub;
     }
 
@@ -128,10 +131,11 @@ export function propagate(subs) {
 
 /**
  * 开始追踪依赖，将depsTail设置成undefind
- * @param dep
+ * @param sub
  */
-export function startTrack(dep) {
-    dep.depsTail = undefined;
+export function startTrack(sub) {
+    sub.tracking = true;
+    sub.depsTail = undefined;
 }
 
 /**
@@ -139,6 +143,7 @@ export function startTrack(dep) {
  * @param sub
  */
 export function endTrack(sub) {
+    sub.tracking = false;
     const depsTail = sub.depsTail;
     /**
      * 1. depsTail存在，并且有nextDep，清理nextDep

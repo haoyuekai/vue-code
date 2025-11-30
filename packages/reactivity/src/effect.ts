@@ -8,6 +8,8 @@ export class ReactiveEffect {
     deps: Link | undefined;
     // 依赖项链表尾节点
     depsTail: Link | undefined;
+    // 增加字段表示是否正在更新，避免effect触发依赖收集导致无限递归循环
+    tracking = false;
 
     constructor(public fn) {}
 
