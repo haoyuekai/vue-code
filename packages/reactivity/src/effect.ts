@@ -3,6 +3,10 @@ import { Link, startTrack, endTrack } from './system';
 // 用来保存当前正在执行的effect
 export let activeSub;
 
+export function setActiveSub(sub) {
+    activeSub = sub;
+}
+
 export class ReactiveEffect {
     // 依赖项链表头节点
     deps: Link | undefined;

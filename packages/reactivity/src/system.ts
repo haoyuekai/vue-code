@@ -1,7 +1,7 @@
 /**
  * 依赖项(ref computed等)
  */
-interface Dependency {
+export interface Dependency {
     // 依赖项链表的头结点
     subs: Link | undefined;
     // 依赖项链表的尾节点
@@ -11,11 +11,13 @@ interface Dependency {
 /**
  * 订阅者(effect watch等)
  */
-interface Sub {
+export interface Sub {
     // 订阅者链表的头结点
     deps: Link | undefined;
     // 订阅者链表的尾节点
     depsTail: Link | undefined;
+
+    tracking: boolean;
 }
 
 /**
@@ -106,6 +108,17 @@ export function link(dep, sub) {
     }
 }
 
+function processComputedUpdate(sub) {
+    /**
+     * 更新计算属性
+     * 1. 调用update
+     * 2. 通知subs链表上的所有sub，重新执行
+     */
+    sub.update();
+
+    propagate(sub.subs);
+}
+
 /**
  *
  * @param subs 传播更新的函数
@@ -117,7 +130,12 @@ export function propagate(subs) {
     while (link) {
         const sub = link.sub;
         if (!sub.tracking) {
-            queuedEffect.push(link.sub);
+            if ('update' in sub) {
+                // computed
+                processComputedUpdate(sub);
+            } else {
+                queuedEffect.push(link.sub);
+            }
         }
         link = link.nextSub;
     }
