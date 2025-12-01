@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <button id="btn">Click me</button>
+    </div>
+
+    <script type="module">
+        // import { ref, effect, watch } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+        import { ref, effect, watch } from '../dist/reactivity.esm.js'
+
+        const state = ref({
+            a: {
+                b: 0
+            }
+        })
+        state.value.c = state.value // 测试循环引用
+
+        const stop = watch(state, (newVal, oldVal) => {
+            console.log(`count changed from`, oldVal, `to`, newVal)
+        }, { deep: true })
+
+        effect(() => {
+            // console.log(`count is: ${state.value.a.b}`)
+        })
+
+        setInterval(() => {
+            state.value.a.b++
+        }, 1000);
+
+        btn.onclick = () => {
+            stop() // 停止监听
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <button id="btn">Click me</button>
+    </div>
+
+    <script type="module">
+        // import { ref, effect, watch } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+        import { ref, reactive, effect, watch } from '../dist/reactivity.esm.js'
+
+        const state = reactive({
+            a: {
+                b: 0,
+                c: {
+                    d: {
+                        e: 1
+                    }
+                }
+            }
+        })
+
+        // 对于reactive对象，watch默认会进行深度监听,如果deep配置项设置为数字，则表示监听的层级
+        const stop = watch(state, (newVal, oldVal) => {
+            console.log(`count changed from`, oldVal, `to`, newVal)
+        }, { deep: 4 })
+
+
+        effect(() => {
+            // console.log(`count is: ${state.a.b}`)
+        })
+
+        setInterval(() => {
+            // state.a.b++
+            state.a.c.d.e++
+        }, 1000);
+
+        btn.onclick = () => {
+            stop() // 停止监听
+        }
+    </script>
+</body>
+
+</html>

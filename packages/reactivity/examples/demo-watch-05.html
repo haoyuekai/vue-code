@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .app,
+        .div {
+            width: 200px;
+            height: 200px;
+            border: 1px solid #000;
+            margin-bottom: 10px;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .div {
+            background-color: #f0f0f0;
+        }
+
+        .active {
+            border: 1px solid red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app active">app</div>
+    <div id="div" class="div">div</div>
+    <button id="btn">切换按钮点击</button>
+
+    <script type="module">
+        // import { ref, effect, watch } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+        import { ref, reactive, effect, watch } from '../dist/reactivity.esm.js'
+
+        const flag = ref(true)
+
+        // 对于reactive对象，watch默认会进行深度监听,如果deep配置项设置为数字，则表示监听的层级
+        const stop = watch(
+            flag,
+            (newVal, oldVal, onCleanup) => {
+                // onCleanup 用于注册清理函数,当下次回调执行前或者停止监听时会执行
+                const dom = newVal ? app : div
+                function handleClick() {
+                    console.log('点击了', newVal ? 'app' : 'div')
+                }
+                dom.addEventListener('click', handleClick)
+
+                onCleanup(() => {
+                    dom.removeEventListener('click', handleClick)
+                })
+            }, { immediate: true })
+
+        btn.onclick = () => {
+            flag.value = !flag.value
+            if (flag.value) {
+                app.classList.add('active')
+                div.classList.remove('active')
+            } else {
+                div.classList.add('active')
+                app.classList.remove('active')
+            }
+        }
+    </script>
+</body>
+
+</html>
