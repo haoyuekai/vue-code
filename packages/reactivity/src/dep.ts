@@ -55,12 +55,24 @@ export function trigger(target, key) {
     // target没有在任何sub（effect）中访问过，没有收集过依赖
     if (!depsMap) return;
 
-    const dep = depsMap.get(key);
-    // key没有在任何sub（effect）中访问过，没有收集过依赖
-    if (!dep) return;
+    // 数组
+    const targetIsArray = Array.isArray(target);
+    if (targetIsArray && key === 'length') {
+        const length = target.length;
+        depsMap.forEach((dep, depKey) => {
+            if (depKey >= length || depKey === 'length') {
+                // 通知访问了 >=length 和 length 的effect重新执行
+                propagate(dep.subs);
+            }
+        });
+    } else {
+        const dep = depsMap.get(key);
+        // key没有在任何sub（effect）中访问过，没有收集过依赖
+        if (!dep) return;
 
-    // 找到dep.subs（effect），通知他们重新执行
-    propagate(dep.subs);
+        // 找到dep.subs（effect），通知他们重新执行
+        propagate(dep.subs);
+    }
 }
 class Dep {
     // 订阅者链表的头结点

@@ -32,7 +32,10 @@ export const mutableHandlers = {
     },
     set(target, key, value, receiver) {
         const oldValue = target[key];
-        const res = Reflect.set(target, key, value, receiver);
+
+        // 处理隐式更新数组的length
+        const targetIsArray = Array.isArray(target);
+        const oldLength = targetIsArray ? target.length : 0;
 
         /**
          * 如果更新了 target[key]，它之前是ref,同步修改原始ref.value
@@ -43,14 +46,25 @@ export const mutableHandlers = {
          */
         if (isRef(oldValue) && !isRef(value)) {
             oldValue.value = value;
-            return res;
+            return true;
         }
+
+        const res = Reflect.set(target, key, value, receiver);
 
         // 只有在值发生变化之后，才触发更新
         if (hasChanged(value, oldValue)) {
             // 触发更新，通知之前收集的依赖，重新执行
             trigger(target, key);
         }
+
+        // 处理隐式更新数组的length
+        const newLength = targetIsArray ? target.length : 0;
+
+        if (targetIsArray && newLength !== oldLength && key !== 'length') {
+            // 隐式更新了数组的length
+            trigger(target, 'length');
+        }
+
         return res;
     },
 };

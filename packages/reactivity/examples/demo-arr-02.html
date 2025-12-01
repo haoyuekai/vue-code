@@ -12,23 +12,22 @@
     </div>
 
     <script type="module">
-        // import { ref, reactive, effect } from '../../../node_modules/vue/dist/vue.esm-browser.js'
         import { ref, reactive, effect } from '../dist/reactivity.esm.js'
-        const a = ref(0)
-        const state = reactive({
-            a
+
+        const state = reactive(['a', 'b', 'c', 'd', 'e'])
+
+        const runner = effect(() => {
+            console.log('数组变化了', state.length);
         })
 
         effect(() => {
-            console.log('>>>>>>>', state.a, a.value);
-
+            console.log('4', state[4]);
         })
 
         setTimeout(() => {
-            a.value = 1
-            // state.a = 1
+            // 隐式更新数组长度
+            state.splice(2, 1)
         }, 1000);
-
     </script>
 </body>
 
