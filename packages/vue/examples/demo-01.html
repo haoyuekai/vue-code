@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import {
+            h,
+            render,
+            createRenderer
+        } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js';
+        import { renderOptions } from '../dist/vue.esm.js';
+
+        /** 
+         * vue通过渲染器将虚拟节点渲染到真实DOM中
+         * vnode => render => 真实DOM
+         */
+        const vnode = h('div', {
+            id: 'container-1',
+            aaa: 'bbb',
+            class: 'container',
+            style: {
+                color: 'red'
+            },
+            onClick() {
+                console.log('clicked');
+            },
+            onMouseleave() {
+                console.log('mouseleave');
+            }
+        }, 'Hello, Vue 3!');
+        const vnode2 = h('div', {
+            id: 'container-2',
+            style: {
+                color: 'yellow',
+                backgroundColor: 'blue'
+            },
+            onClick() {
+                console.log('更新了的 clicked');
+            }
+        }, 'Hello, Vue 3!');
+        /**
+         * runtime-core包中提供了核心渲染逻辑，依赖响应式模块儿 reactivity
+         * 
+         * runtime-dom包中提供了createRenderer方法，用于创建渲染器，依赖runtime-core包
+         *
+         * vue包导出了 runtime-dom
+         */
+        const renderer = createRenderer(renderOptions);
+
+        renderer.render(vnode, document.getElementById('app'));
+
+        setTimeout(() => {
+            renderer.render(vnode2, document.getElementById('app'));
+        }, 3000);
+
+        setTimeout(() => {
+            renderer.render(vnode, document.getElementById('app'));
+        }, 6000);
+
+
+    </script>
+</body>
+
+</html>

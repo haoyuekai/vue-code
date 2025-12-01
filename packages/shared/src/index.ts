@@ -16,3 +16,8 @@ export function hasChanged(newValue, oldValue) {
 export function isFunction(value) {
     return typeof value === 'function';
 }
+
+// 是否是event
+export function isOn(key) {
+    return /^on[A-Z]/.test(key);
+}
