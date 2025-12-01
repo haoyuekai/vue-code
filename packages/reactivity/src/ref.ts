@@ -87,3 +87,68 @@ export function triggerRef(dep) {
         propagate(dep.subs);
     }
 }
+
+class ObjectRefImpl {
+    [ReactiveFlags.IS_REF] = true;
+    constructor(
+        public _object,
+        public _key,
+    ) {}
+
+    get value() {
+        return this._object[this._key];
+    }
+
+    set value(newValue) {
+        this._object[this._key] = newValue;
+    }
+}
+
+export function toRef(object, key) {
+    return new ObjectRefImpl(object, key);
+}
+
+export function toRefs(target) {
+    // 源码会先判断target是否是响应式对象，不是的话，抛出错误，此处暂不实现
+    const res = Array.isArray(target) ? new Array(target.length) : {};
+    for (const key in target) {
+        res[key] = new ObjectRefImpl(target, key);
+    }
+    return res;
+}
+
+export function unref(value) {
+    return isRef(value) ? value.value : value;
+}
+
+// 源码中未导出，
+export function proxyRefs(target) {
+    return new Proxy(target, {
+        get(target, key, receiver) {
+            /**
+             * 自动解包
+             * target[key]是ref,返回ref.value
+             * 不是ref,返回target[key]
+             */
+            const res = Reflect.get(target, key, receiver);
+
+            return unref(res);
+        },
+
+        set(target, key, newValue, receiver) {
+            const oldValue = target[key];
+            /**
+             * 如果更新了 target[key]，它之前是ref,同步修改原始ref.value
+             * 如果newValue是ref,不修改原始ref.value
+             * example: a = ref(0) target = { a }
+             * target.a = 1 // 同步更新a.value
+             * target.a = ref(1) // 不更新a.value
+             */
+            if (isRef(oldValue) && !isRef(newValue)) {
+                oldValue.value = newValue;
+                return true;
+            }
+            return Reflect.set(target, key, newValue, receiver);
+        },
+    });
+}

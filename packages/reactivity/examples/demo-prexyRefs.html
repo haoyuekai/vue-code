@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+    </div>
+
+    <script type="module">
+        // import { ref, reactive, effect, toRefs } from "../../../node_modules/vue/dist/vue.esm-browser.js";
+        import { ref, reactive, effect, toRefs, proxyRefs } from '../dist/reactivity.esm.js'
+
+        const state = reactive({
+            name: 'Alice',
+            age: 18
+        });
+
+        const setupState = proxyRefs({
+            ...toRefs(state)
+        });
+
+        effect(() => {
+            console.log(`Name: ${setupState.name}, Age: ${setupState.age}`);
+        });
+
+        setTimeout(() => {
+            setupState.name = 'Bob'; // 触发响应式更新
+            setupState.age = 20;     // 触发响应式更新
+        }, 1000);
+
+        // 使用场景
+        const comp = {
+            setup() {
+                const state = reactive({
+                    title: 'Hello World',
+                    count: 0
+                });
+
+                // { title: Ref, count: Ref }
+                return {
+                    ...toRefs(state)
+                };
+            },
+            template: `
+                <div>
+                    <h1>{{ setupState.title }}</h1>
+                    <p>{{ setupState.count }}</p>
+                    <button @click="setupState.count++">Increment</button>
+                </div>
+            `
+        }
+
+    </script>
+</body>
+
+</html>

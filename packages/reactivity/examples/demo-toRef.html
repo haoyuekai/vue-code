@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+    </div>
+
+    <script type="module">
+        // import { ref, reactive, effect, toRef } from "../../../node_modules/vue/dist/vue.esm-browser.js";
+        import { ref, reactive, effect, toRef } from '../dist/reactivity.esm.js'
+
+        const state = reactive({
+            name: 'Alice',
+            age: 30
+        });
+
+        let name = toRef(state, 'name');
+        console.log(name);
+        effect(() => {
+            console.log('name changed:', name.value);
+        });
+
+
+        setTimeout(() => {
+            name.value = 'Bob'; // 更新 name
+        }, 1000);
+
+    </script>
+</body>
+
+</html>
