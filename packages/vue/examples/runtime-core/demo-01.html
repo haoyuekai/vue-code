@@ -36,7 +36,7 @@
          * 8. const vnode = h('div', { class: 'container' }, [h('span', 'Hello'), h('span', ' world!')]);
          */
         const vnode = h('div', { class: 'container' }, 'Hello world!');
-        vnode.shapeFlag = 9; // 手动设置 shapeFlag 为 带有子节点的元素类型
+
         console.log(vnode);
         render(vnode, document.getElementById('app'));
 

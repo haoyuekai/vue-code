@@ -12,6 +12,7 @@
  */
 
 import { isArray, isObject } from '@vue/shared';
+import { createVNode } from './vnode';
 
 export function h(type, propsOrChildren?, children?) {
     /**
@@ -61,26 +62,4 @@ export function h(type, propsOrChildren?, children?) {
  */
 function isVNode(value) {
     return value?.__v_isVNode;
-}
-
-/**
- * 创建虚拟节点的底层方法
- * @param type 节点类型
- * @param props 节点属性
- * @param children 子节点
- */
-function createVNode(type, props?, children?) {
-    const vnode = {
-        // 虚拟节点标识
-        __v_isVNode: true,
-        type,
-        props,
-        children,
-        // 做 diff 用
-        key: props?.key,
-        // 虚拟节点要挂载的节点
-        el: null,
-    };
-
-    return vnode;
 }
