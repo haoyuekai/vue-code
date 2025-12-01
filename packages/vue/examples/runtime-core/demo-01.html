@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import {
+            // h,
+            render,
+            createRenderer
+        } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import { renderOptions, h } from '../../dist/vue.esm.js';
+
+        /** 
+         * h 函数使用方法
+         * 1. const vnode = h('div', 'Hello world!');
+         * 2. const vnode = h('div', h('span', 'Hello world!'));
+         * 3. const vnode = h('div', [h('span', 'Hello'), h('span', ' world!')]);
+         * 4. const vnode = h('div', { class: 'container' });
+         * -------
+         * 5. const vnode = h('div', { class: 'container' }, 'Hello world!');
+         * 6. const vnode = h('div', { class: 'container' }, h('span', 'Hello world!'));
+         * 7. const vnode = h('div', { class: 'container' }, h('span', 'Hello'), h('span', ' world!'));
+         * 8. const vnode = h('div', { class: 'container' }, [h('span', 'Hello'), h('span', ' world!')]);
+         */
+        const vnode = h('div', { class: 'container' }, 'Hello world!');
+        vnode.shapeFlag = 9; // 手动设置 shapeFlag 为 带有子节点的元素类型
+        console.log(vnode);
+        render(vnode, document.getElementById('app'));
+
+    </script>
+</body>
+
+</html>

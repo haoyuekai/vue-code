@@ -11,4 +11,10 @@ const renderOptions = {
     ...nodeOps,
 };
 
+const renderer = createRenderer(renderOptions);
+
+export function render(vnode, container) {
+    renderer.render(vnode, container);
+}
+
 export { renderOptions };
