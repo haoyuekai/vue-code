@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+    </div>
+
+    <script type="module">
+        // import { ref, computed, effect } from '../../../node_modules/vue/dist/vue.esm-browser.js'
+        import { ref, computed, effect } from '../dist/reactivity.esm.js'
+
+        const count = ref(0)
+
+        /**
+         * 计算属性 computed 比较特殊
+         * 1. computed 既是一个 sub（effect）
+         * 2. computed 又是一个 dep（ref）
+         */
+        const c = computed(() => {
+            console.count('计算了');
+            return count.value * 0
+        })
+
+        effect(() => {
+            console.log('>>>>>>>', c.value);
+
+        })
+
+        setTimeout(() => {
+            count.value++
+        }, 1000);
+
+    </script>
+</body>
+
+</html>

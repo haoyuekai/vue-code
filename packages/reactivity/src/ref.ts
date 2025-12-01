@@ -1,6 +1,6 @@
 import { hasChanged, isObject } from '@vue/shared';
 import { activeSub } from './effect';
-import { link, Link, propagate } from './system';
+import { Dependency, link, Link, propagate } from './system';
 import { reactive } from './reactive';
 
 // 枚举
@@ -11,7 +11,7 @@ export enum ReactiveFlags {
 /**
  * Ref类
  */
-class RefImpl {
+class RefImpl implements Dependency {
     // 保存实际的值
     _value;
 

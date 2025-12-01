@@ -111,12 +111,12 @@ export function link(dep, sub) {
 function processComputedUpdate(sub) {
     /**
      * 更新计算属性
-     * 1. 调用update
-     * 2. 通知subs链表上的所有sub，重新执行
+     * 1. 调用update，判断值是否发生变化
+     * 2. 值发生变化，通知subs链表上的所有sub，重新执行
      */
-    sub.update();
-
-    propagate(sub.subs);
+    if (sub.subs && sub.update()) {
+        propagate(sub.subs);
+    }
 }
 
 /**
@@ -129,7 +129,9 @@ export function propagate(subs) {
 
     while (link) {
         const sub = link.sub;
-        if (!sub.tracking) {
+        if (!sub.tracking && !sub.dirty) {
+            // 计算属性标记位脏的
+            sub.dirty = true;
             if ('update' in sub) {
                 // computed
                 processComputedUpdate(sub);
@@ -161,6 +163,7 @@ export function startTrack(sub) {
 export function endTrack(sub) {
     sub.tracking = false;
     const depsTail = sub.depsTail;
+    sub.dirty = false;
     /**
      * 1. depsTail存在，并且有nextDep，清理nextDep
      * 2. depsTail没有，并且deps有，清理所有的

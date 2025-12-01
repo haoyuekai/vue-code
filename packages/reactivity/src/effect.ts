@@ -1,4 +1,4 @@
-import { Link, startTrack, endTrack } from './system';
+import { Link, startTrack, endTrack, Sub } from './system';
 
 // 用来保存当前正在执行的effect
 export let activeSub;
@@ -7,13 +7,15 @@ export function setActiveSub(sub) {
     activeSub = sub;
 }
 
-export class ReactiveEffect {
+export class ReactiveEffect implements Sub {
     // 依赖项链表头节点
     deps: Link | undefined;
     // 依赖项链表尾节点
     depsTail: Link | undefined;
     // 增加字段表示是否正在更新，避免effect触发依赖收集导致无限递归循环
     tracking = false;
+
+    dirty = false;
 
     constructor(public fn) {}
 
