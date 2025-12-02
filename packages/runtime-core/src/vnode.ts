@@ -1,12 +1,22 @@
 import { isArray, isString, ShapeFlags } from '@vue/shared';
 
 /**
+ * 判断两个节点是否是同一类型，决定节点是否可以复用（更新）
+ * @param n1
+ * @param n2
+ * @returns
+ */
+export function isSameVNodeType(n1, n2) {
+    return n1.type === n2.type && n1.key === n2.key;
+}
+
+/**
  * 创建虚拟节点的底层方法
  * @param type 节点类型
  * @param props 节点属性
  * @param children 子节点
  */
-export function createVNode(type, props?, children?) {
+export function createVNode(type, props?, children = null) {
     let shapeFlag;
 
     if (isString(type)) {

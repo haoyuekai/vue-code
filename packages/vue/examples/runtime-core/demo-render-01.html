@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import {
+            // h,
+            // render,
+            createRenderer
+        } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import { renderOptions, h, render } from '../../dist/vue.esm.js';
+
+        // const vnode = h('div', { style: { color: 'red' } }, 'vnode-1');
+        // const vnode = h('div', { style: { color: 'red' } }, [h('span', 'vnode-1'), h('span', '--2')]);
+        const vnode = h('div', { style: { color: 'red' } });
+
+        // const vnode2 = h('div', { style: { color: 'blue' } }, 'vnode-2');
+        // const vnode2 = h('div', { style: { color: 'blue' } }, [h('span', 'vnode-2'), h('span', '--2')]);
+        const vnode2 = h('div', { style: { height: '100px', background: 'blue' } });
+
+        render(vnode, document.getElementById('app'));
+
+        setTimeout(() => {
+            render(vnode2, document.getElementById('app')); // 更新
+            // render(null, document.getElementById('app')); // 卸载
+        }, 3000);
+
+        // setTimeout(() => {
+        //     render(vnode, document.getElementById('app'));
+        // }, 6000);
+
+    </script>
+</body>
+
+</html>

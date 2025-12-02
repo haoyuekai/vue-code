@@ -2,11 +2,11 @@ export function patchStyle(el, prevValue, nextValue) {
     const style = el.style;
 
     /**
-     * 把之前有的，但是现在没有的，删 掉
+     * 把之前有的，但是现在没有的，删掉
      */
     if (prevValue) {
         for (const key in prevValue) {
-            if (!(key in nextValue)) {
+            if (nextValue?.[key] == null) {
                 style[key] = null;
             }
         }
