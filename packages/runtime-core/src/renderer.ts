@@ -70,8 +70,9 @@ export function createRenderer(options) {
      * 3. 挂载他的子节点
      * @param vnode
      * @param container
+     * @param anchor
      */
-    const mountElement = (vnode, container) => {
+    const mountElement = (vnode, container, anchor = null) => {
         const { type, props, children, shapeFlag } = vnode;
 
         // 创建dom元素
@@ -96,7 +97,7 @@ export function createRenderer(options) {
         }
 
         // 把el插入到container中
-        hostInsert(el, container);
+        hostInsert(el, container, anchor);
     };
 
     /**
@@ -168,7 +169,7 @@ export function createRenderer(options) {
                 if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                     if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                         // 新--数组，老--数组 全量diff
-                        // TODO: 全量diff
+                        patchKeyedChildren(n1.children, n2.children, el);
                     } else {
                         // 新--null，老--数组 全量diff
                         unmountChildren(n1.children);
@@ -180,6 +181,121 @@ export function createRenderer(options) {
                         mountChildren(n2.children, el);
                     }
                     // 新--null，不做处理
+                }
+            }
+        }
+    };
+
+    /**
+     * 全量diff
+     * 1. 双端 diff
+     * 2. 乱序 diff
+     * @param c1 老的子节点
+     * @param c2 新的子节点
+     * @param container
+     */
+    const patchKeyedChildren = (c1, c2, container) => {
+        // 开始对比的下标
+        let i = 0;
+
+        // 老的子节点最后一个元素的下标
+        let e1 = c1.length - 1;
+
+        // 新的子节点最后一个元素的下标
+        let e2 = c2.length - 1;
+
+        // 头部对比
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[i];
+            const n2 = c2[i];
+            if (isSameVNodeType(n1, n2)) {
+                // n1, n2 是同意类型的子节点，更新，然后对比下一个
+                patch(n1, n2, container);
+            } else {
+                break;
+            }
+            i++;
+        }
+
+        // 尾部对比
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[e1];
+            const n2 = c2[e2];
+            if (isSameVNodeType(n1, n2)) {
+                patch(n1, n2, container);
+            } else {
+                break;
+            }
+            e1--;
+            e2--;
+        }
+
+        if (i > e1) {
+            /**
+             * 老的少，新的多。需要挂载新的，范围是 c2 中 i 到 e2 的节点
+             */
+
+            const nextPosition = e2 + 1;
+
+            const anchor =
+                nextPosition < c2.length ? c2[nextPosition].el : null;
+
+            while (i <= e2) {
+                patch(null, c2[i], container, anchor);
+                i++;
+            }
+        } else if (i > e2) {
+            /**
+             * 老的多，新的少。需要卸载老的中多的节点，范围是 c1 中 i 到 e1 的节点
+             */
+            while (i <= e1) {
+                unmount(c1[i]);
+                i++;
+            }
+        } else {
+            /**
+             * 乱序
+             * 找到 key 相同的 虚拟节点，执行 patch
+             */
+
+            // 老的子节点开始查找的位置
+            let s1 = i;
+            // 新的子节点开始查找的位置
+            let s2 = i;
+
+            /**
+             * 做一份新的子节点的 key 和 index 的映射关系
+             */
+            const keyToNewIndexMap = new Map();
+
+            // 遍历新的 s2 - e2 之间的节点（未更新的节点），做一份map
+            for (let j = s2; j <= e2; j++) {
+                const n2 = c2[j];
+                keyToNewIndexMap.set(n2.key, j);
+            }
+            // 遍历老的 s1 - e1 之间的节点
+            for (let j = s1; j <= e1; j++) {
+                const n1 = c1[j];
+                const newIndex = keyToNewIndexMap.get(n1.key);
+                // 判断 key 在新的里面是否存在，决定 patch（更新） 或者 卸载
+                if (newIndex != null) {
+                    patch(n1, c2[newIndex], container);
+                } else {
+                    unmount(n1);
+                }
+            }
+
+            // 遍历新的 e2 - s2 之间的子元素，倒序插入，调整顺序
+            for (let j = e2; j >= s2; j--) {
+                const n2 = c2[j];
+                const anchor = c2[j + 1]?.el || null;
+
+                if (n2.el) {
+                    // el存在说明之前挂载过，调整顺序
+                    hostInsert(n2.el, container, anchor);
+                } else {
+                    // el不存在，说明之前没有挂载过，直接挂载（第一个参数传null）
+                    patch(null, n2, container, anchor);
                 }
             }
         }
@@ -211,8 +327,9 @@ export function createRenderer(options) {
      * @param n1 老节点，如果有，表示要和 n2 做 diff 进行更新，没有则表示挂载
      * @param n2 新节点，
      * @param container 要要挂载的容器
+     * @param anchor 插入元素的锚点
      */
-    const patch = (n1, n2, container) => {
+    const patch = (n1, n2, container, anchor = null) => {
         if (n1 === n2) {
             // 如果两次传递了同一个虚拟节点，直接返回
             return;
@@ -226,7 +343,7 @@ export function createRenderer(options) {
 
         if (n1 === null) {
             // 挂载
-            mountElement(n2, container);
+            mountElement(n2, container, anchor);
         } else {
             // 更新
             patchElement(n1, n2);
