@@ -517,7 +517,6 @@ export function createRenderer(options) {
          * 2. 更新
          * 3. 卸载
          */
-
         if (vnode === null) {
             if (container._vnode) {
                 // 卸载

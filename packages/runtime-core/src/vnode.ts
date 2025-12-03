@@ -24,6 +24,7 @@ export function normalizeVNode(vnode) {
         // string 或者 number 转换成文本节点
         return createVNode(Text, null, String(vnode));
     }
+    return vnode;
 }
 
 /**

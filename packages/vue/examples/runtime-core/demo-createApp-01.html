@@ -17,14 +17,28 @@
     <button id="btn">按钮</button>
 
     <script type="module">
-        // import {
-        //     h,
-        //     render,
-        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            // h,
+            // ref,
+            // createApp
+        } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
         import { h, ref, createApp } from '../../dist/vue.esm.js';
 
+
+        /**
+         * 属性
+         * props
+         * attrs 
+         */
         const Comp = {
-            setup() {
+            props: {
+                msg: String
+            },
+            setup(props, { attrs }) {
+
+                console.log('props:', props)
+                console.log('attrs:', attrs)
+
                 const count = ref(1)
 
                 btn.addEventListener('click', function () {
@@ -39,7 +53,7 @@
             }
         }
 
-        const App = createApp(Comp, { msg: 'hello' })
+        const App = createApp(Comp, { msg: 'hello', cound: 0 })
         App.mount(app)
 
 

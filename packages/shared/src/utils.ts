@@ -31,3 +31,7 @@ export function isNumber(value) {
 }
 
 export const isArray = Array.isArray;
+
+export function hasOwn(object, key) {
+    return Object.hasOwn(object, key);
+}
