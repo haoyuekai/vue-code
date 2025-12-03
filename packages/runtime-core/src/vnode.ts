@@ -1,4 +1,4 @@
-import { isArray, isNumber, isString, ShapeFlags } from '@vue/shared';
+import { isArray, isNumber, isObject, isString, ShapeFlags } from '@vue/shared';
 
 /**
  * 文本节点标记
@@ -27,16 +27,34 @@ export function normalizeVNode(vnode) {
 }
 
 /**
+ * 标准化children
+ * @param children
+ */
+function normalizeChildren(children) {
+    if (isNumber(children)) {
+        // 数字转为字符串
+        children = String(children);
+    }
+
+    return children;
+}
+
+/**
  * 创建虚拟节点的底层方法
  * @param type 节点类型
  * @param props 节点属性
  * @param children 子节点
  */
 export function createVNode(type, props?, children = null) {
+    children = normalizeChildren(children);
+
     let shapeFlag = 0;
 
     if (isString(type)) {
         shapeFlag = ShapeFlags.ELEMENT;
+    } else if (isObject(type)) {
+        // 有状态组件
+        shapeFlag = ShapeFlags.STATEFUL_COMPONENT;
     }
 
     if (isString(children)) {
