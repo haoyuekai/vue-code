@@ -2,6 +2,7 @@ import { ShapeFlags } from '@vue/shared';
 import { isSameVNodeType, normalizeVNode, Text } from './vnode';
 import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
+import { ReactiveEffect } from '@vue/reactivity';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -417,11 +418,38 @@ export function createRenderer(options) {
 
         setupComponent(instance);
 
-        // 调用 render 拿到 subTree , this 指向 instance.setupState
-        const subTree = instance.render.call(instance.setupState);
+        const componentUpdateFn = () => {
+            /**
+             * 区分挂载和跟新 instance.isMounted
+             */
 
-        // 将 subTree 挂载到 container 上
-        patch(null, subTree, container, anchor);
+            if (!instance.isMounted) {
+                // 调用 render 拿到 subTree , this 指向 instance.setupState
+                const subTree = instance.render.call(instance.setupState);
+
+                // 将 subTree 挂载到 container 上
+                patch(null, subTree, container, anchor);
+
+                // 保存子树
+                instance.subTree = subTree;
+                // 标记已挂载
+                instance.isMounted = true;
+            } else {
+                const prevSubTree = instance.subTree;
+                // 调用 render 拿到 subTree , this 指向 instance.setupState
+                const subTree = instance.render.call(instance.setupState);
+
+                // 将 subTree 挂载到 container 上
+                patch(prevSubTree, subTree, container, anchor);
+
+                // 保存子树
+                instance.subTree = subTree;
+            }
+        };
+
+        // 创建 effect
+        const effect = new ReactiveEffect(componentUpdateFn);
+        effect.run();
     };
 
     /**
