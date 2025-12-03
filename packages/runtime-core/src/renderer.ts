@@ -268,22 +268,53 @@ export function createRenderer(options) {
              */
             const keyToNewIndexMap = new Map();
 
+            /**
+             *
+             * -1 代表不需要计算的
+             */
+            const newIndexToOldIndex = new Array(e2 - s2 + 1);
+
             // 遍历新的 s2 - e2 之间的节点（未更新的节点），做一份map
             for (let j = s2; j <= e2; j++) {
                 const n2 = c2[j];
                 keyToNewIndexMap.set(n2.key, j);
             }
+
+            // 临时保存下标是否递增
+            let pos = -1;
+
+            /**
+             * 是否需要调整顺序
+             * false，表示老节点顺序没发生变化
+             * true，表示老节点顺序发生变化，求出最长递增子序列辅助排序
+             */
+            let moved = false;
+
             // 遍历老的 s1 - e1 之间的节点
             for (let j = s1; j <= e1; j++) {
                 const n1 = c1[j];
                 const newIndex = keyToNewIndexMap.get(n1.key);
                 // 判断 key 在新的里面是否存在，决定 patch（更新） 或者 卸载
                 if (newIndex != null) {
+                    if (newIndex > pos) {
+                        pos = newIndex;
+                    } else {
+                        // 非递增，表示需要移动
+                        moved = true;
+                    }
+                    newIndexToOldIndex[newIndex] = j;
                     patch(n1, c2[newIndex], container);
                 } else {
                     unmount(n1);
                 }
             }
+
+            // 计算最长递增子序列，不需要移动的节点下标
+            const newIndexSequence = moved
+                ? getSequence(newIndexToOldIndex)
+                : [];
+            // 转换成 Set 提高查找性能（o(1)） Array ( o(n) )
+            const sequenceSet = new Set(newIndexSequence);
 
             // 遍历新的 e2 - s2 之间的子元素，倒序插入，调整顺序
             for (let j = e2; j >= s2; j--) {
@@ -291,8 +322,15 @@ export function createRenderer(options) {
                 const anchor = c2[j + 1]?.el || null;
 
                 if (n2.el) {
-                    // el存在说明之前挂载过，调整顺序
-                    hostInsert(n2.el, container, anchor);
+                    /**
+                     * el存在说明之前挂载过，调整顺序
+                     * moved 为 false,表示老节点顺序没改变
+                     * 调整前判断是否在最长递增子序列里面
+                     * 如果不在，表示需要移动，调整顺序
+                     */
+                    if (moved && !sequenceSet.has(j)) {
+                        hostInsert(n2.el, container, anchor);
+                    }
                 } else {
                     // el不存在，说明之前没有挂载过，直接挂载（第一个参数传null）
                     patch(null, n2, container, anchor);
@@ -374,4 +412,74 @@ export function createRenderer(options) {
     return {
         render,
     };
+}
+
+/**
+ * 求最长递增子序列
+ * @param arr
+ * @returns
+ */
+function getSequence(arr) {
+    const result = [];
+
+    // 记录前驱节点
+    const map = new Map();
+
+    for (let i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        // -1 不在计算范围内
+        if (item === -1 || item == undefined) continue;
+
+        if (result.length === 0) {
+            // 如果result为空，说明当前元素是递增子序列的第一个元素，把当前索引放进去
+            result.push(i);
+            continue;
+        }
+
+        const lastIndex = result[result.length - 1];
+        const lastItem = arr[lastIndex];
+
+        // 当前项大于上一个，说明可以延续递增子序列，直接加入
+        if (item > lastItem) {
+            result.push(i);
+            map.set(i, lastIndex);
+            continue;
+        }
+
+        // item <= lastItem
+        let left = 0;
+        let right = result.length;
+
+        while (left < right) {
+            const mid = Math.floor((left + right) / 2);
+            const midItem = arr[result[mid]];
+
+            if (item > midItem) {
+                left = mid + 1;
+            } else {
+                right = mid;
+            }
+        }
+
+        if (arr[result[left]] > item) {
+            if (left > 0) {
+                map.set(i, result[left - 1]);
+            }
+            // 找到合适的位置，把索引替换进去
+            result[left] = i;
+        }
+    }
+
+    let l = result.length;
+    let last = result[l - 1];
+
+    while (l > 0) {
+        l--;
+        // 纠正顺序
+        result[l] = last;
+        // 找前驱节点
+        last = map.get(last);
+    }
+
+    return result;
 }

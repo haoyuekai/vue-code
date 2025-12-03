@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        // import {
+        //     h,
+        //     render,
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import { h, render } from '../../dist/vue.esm.js';
+
+        // [a, b, c, d, e]
+        const vnode = h('div', { class: 'container' }, [
+            h('p', { key: 'A', style: { color: 'blue' } }, 'A'),
+            h('p', { key: 'B', style: { color: 'blue' } }, 'B'),
+            h('p', { key: 'C', style: { color: 'blue' } }, 'C'),
+            h('p', { key: 'D', style: { color: 'blue' } }, 'D'),
+            h('p', { key: 'E', style: { color: 'blue' } }, 'E'),
+        ]);
+
+        // [a, c, d, b, e]
+        const vnode2 = h('div', { class: 'container' }, [
+            h('p', { key: 'A', style: { color: 'red' } }, 'A'),
+            h('p', { key: 'Q', style: { color: 'red' } }, 'Q'),
+            h('p', { key: 'B', style: { color: 'red' } }, 'B'),
+            h('p', { key: 'C', style: { color: 'red' } }, 'C'),
+            h('p', { key: 'D', style: { color: 'red' } }, 'D'),
+            h('p', { key: 'W', style: { color: 'red' } }, 'W'),
+            h('p', { key: 'E', style: { color: 'red' } }, 'E'),
+        ]);
+
+        render(vnode, document.getElementById('app'));
+
+        setTimeout(() => {
+            render(vnode2, document.getElementById('app')); // 更新
+        }, 3000);
+
+
+    </script>
+</body>
+
+</html>
