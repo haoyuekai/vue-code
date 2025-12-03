@@ -16,7 +16,7 @@ export const nodeOps = {
         el.textContent = text;
     },
     // 创建文本节点
-    createText(el, text) {
+    createText(text) {
         return document.createTextNode(text);
     },
     // 设置文本节点内容

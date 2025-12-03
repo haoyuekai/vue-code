@@ -1,7 +1,5 @@
-import { render } from '@vue/runtime-dom';
 import { ShapeFlags } from '@vue/shared';
-import { isSameVNodeType } from './vnode';
-import { patchClass } from 'packages/runtime-dom/src/modules/patchClass';
+import { isSameVNodeType, normalizeVNode, Text } from './vnode';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -57,7 +55,8 @@ export function createRenderer(options) {
      */
     const mountChildren = (children, el) => {
         for (let i = 0; i < children.length; i++) {
-            const child = children[i];
+            // 标准化vnode
+            const child = (children[i] = normalizeVNode(children[i]));
             // 递归挂载子节点
             patch(null, child, el);
         }
@@ -207,7 +206,7 @@ export function createRenderer(options) {
         // 头部对比
         while (i <= e1 && i <= e2) {
             const n1 = c1[i];
-            const n2 = c2[i];
+            const n2 = (c2[i] = normalizeVNode(c2[i]));
             if (isSameVNodeType(n1, n2)) {
                 // n1, n2 是同意类型的子节点，更新，然后对比下一个
                 patch(n1, n2, container);
@@ -220,7 +219,7 @@ export function createRenderer(options) {
         // 尾部对比
         while (i <= e1 && i <= e2) {
             const n1 = c1[e1];
-            const n2 = c2[e2];
+            const n2 = (c2[e2] = normalizeVNode(c2[e2]));
             if (isSameVNodeType(n1, n2)) {
                 patch(n1, n2, container);
             } else {
@@ -241,7 +240,7 @@ export function createRenderer(options) {
                 nextPosition < c2.length ? c2[nextPosition].el : null;
 
             while (i <= e2) {
-                patch(null, c2[i], container, anchor);
+                patch(null, (c2[i] = normalizeVNode(c2[i])), container, anchor);
                 i++;
             }
         } else if (i > e2) {
@@ -276,7 +275,7 @@ export function createRenderer(options) {
 
             // 遍历新的 s2 - e2 之间的节点（未更新的节点），做一份map
             for (let j = s2; j <= e2; j++) {
-                const n2 = c2[j];
+                const n2 = (c2[j] = normalizeVNode(c2[j]));
                 keyToNewIndexMap.set(n2.key, j);
             }
 
@@ -361,6 +360,48 @@ export function createRenderer(options) {
     };
 
     /**
+     * 处理元素的挂载和更新
+     * @param n1
+     * @param n2
+     * @param container
+     * @param anchor
+     */
+    const processElement = (n1, n2, container, anchor) => {
+        if (n1 === null) {
+            // 挂载
+            mountElement(n2, container, anchor);
+        } else {
+            // 更新
+            patchElement(n1, n2);
+        }
+    };
+
+    /**
+     * 处理文本节点的挂载和更新
+     * @param n1
+     * @param n2
+     * @param container
+     * @param anchor
+     */
+    const processText = (n1, n2, container, anchor) => {
+        if (n1 == null) {
+            // 挂载
+            // 创建文本节点
+            const el = hostCreateText(n2.children);
+            // vnode上绑定el
+            n2.el = el;
+            // 文本节点插入到container中
+            hostInsert(el, container, anchor);
+        } else {
+            // 更新
+            n2.el = n1.el;
+            if (n2.children !== n1.children) {
+                hostSetText(n2.el, n2.children);
+            }
+        }
+    };
+
+    /**
      * 更新和挂载的方法
      * @param n1 老节点，如果有，表示要和 n2 做 diff 进行更新，没有则表示挂载
      * @param n2 新节点，
@@ -379,12 +420,26 @@ export function createRenderer(options) {
             n1 = null;
         }
 
-        if (n1 === null) {
-            // 挂载
-            mountElement(n2, container, anchor);
-        } else {
-            // 更新
-            patchElement(n1, n2);
+        /**
+         * 节点类型
+         * 元素
+         * 文本
+         * 组件
+         */
+
+        const { shapeFlag, type } = n2;
+
+        switch (type) {
+            case Text:
+                processText(n1, n2, container, anchor);
+                break;
+            default:
+                if (shapeFlag & ShapeFlags.ELEMENT) {
+                    processElement(n1, n2, container, anchor);
+                } else {
+                    // TODO: 组件
+                }
+                break;
         }
     };
 

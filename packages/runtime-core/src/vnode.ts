@@ -1,4 +1,9 @@
-import { isArray, isString, ShapeFlags } from '@vue/shared';
+import { isArray, isNumber, isString, ShapeFlags } from '@vue/shared';
+
+/**
+ * 文本节点标记
+ */
+export const Text = Symbol('v-txt');
 
 /**
  * 判断两个节点是否是同一类型，决定节点是否可以复用（更新）
@@ -11,13 +16,24 @@ export function isSameVNodeType(n1, n2) {
 }
 
 /**
+ * vnode标准化
+ * @param vnode
+ */
+export function normalizeVNode(vnode) {
+    if (isString(vnode) || isNumber(vnode)) {
+        // string 或者 number 转换成文本节点
+        return createVNode(Text, null, String(vnode));
+    }
+}
+
+/**
  * 创建虚拟节点的底层方法
  * @param type 节点类型
  * @param props 节点属性
  * @param children 子节点
  */
 export function createVNode(type, props?, children = null) {
-    let shapeFlag;
+    let shapeFlag = 0;
 
     if (isString(type)) {
         shapeFlag = ShapeFlags.ELEMENT;
