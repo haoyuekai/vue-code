@@ -1,6 +1,7 @@
 import { proxyRefs } from '@vue/reactivity';
 import { initProps, normalizePropsOptions } from './componentProps';
 import { hasOwn, isFunction, isObject } from '@vue/shared';
+import { nextTick } from './scheduler';
 
 /**
  * 创建组件实例
@@ -14,9 +15,8 @@ export function createComponentInstance(vnode) {
         // 渲染函数
         render: null,
         // setup返回的状态
-        setupState: null,
+        setupState: {},
         // instance 的代理对象
-        proxy: null,
         propsOptions: normalizePropsOptions(type.props),
         props: {},
         attrs: {},
@@ -43,7 +43,7 @@ export function setupComponent(instance) {
      */
     initProps(instance);
 
-    setupStateFulComponent(instance);
+    setupStatefulComponent(instance);
 }
 
 const publicPropertiesMap = {
@@ -51,7 +51,10 @@ const publicPropertiesMap = {
     $slots: instance => instance.slots,
     $refs: instance => instance.refs,
     $nextTick: instance => {
-        // TODO: nextTick
+        return nextTick.bind(instance);
+    },
+    $forceUpdate: instance => {
+        return () => instance.update();
     },
 };
 
@@ -65,7 +68,6 @@ const publicInstanceProxyHandlers = {
          * 先去 setupState 中找
          * 没找到，再去 props 中找
          */
-
         if (hasOwn(setupState, key)) {
             return setupState[key];
         }
@@ -106,7 +108,7 @@ const publicInstanceProxyHandlers = {
     },
 };
 
-function setupStateFulComponent(instance) {
+function setupStatefulComponent(instance) {
     const { type } = instance;
 
     /**

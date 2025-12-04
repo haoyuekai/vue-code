@@ -3,6 +3,7 @@ import { isSameVNodeType, normalizeVNode, Text } from './vnode';
 import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
 import { ReactiveEffect } from '@vue/reactivity';
+import { queueJob } from './scheduler';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -404,23 +405,10 @@ export function createRenderer(options) {
         }
     };
 
-    /**
-     * 组件的挂载
-     * 1. 创建组件实例
-     * 2. 初始化组件的状态
-     * 3. 将组件挂载到页面上
-     * @param vnode
-     * @param container
-     * @param anchor
-     */
-    const mountComponent = (vnode, container, anchor) => {
-        const instance = createComponentInstance(vnode);
-
-        setupComponent(instance);
-
+    const setupRenderEffect = (instance, container, anchor) => {
         const componentUpdateFn = () => {
             /**
-             * 区分挂载和跟新 instance.isMounted
+             * 区分挂载和更新 instance.isMounted
              */
 
             if (!instance.isMounted) {
@@ -437,7 +425,7 @@ export function createRenderer(options) {
             } else {
                 const prevSubTree = instance.subTree;
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = instance.render.call(instance.setupState);
+                const subTree = instance.render.call(instance.proxy);
 
                 // 将 subTree 挂载到 container 上
                 patch(prevSubTree, subTree, container, anchor);
@@ -449,7 +437,36 @@ export function createRenderer(options) {
 
         // 创建 effect
         const effect = new ReactiveEffect(componentUpdateFn);
-        effect.run();
+        const update = effect.run.bind(effect);
+
+        // 保存 effect run 到 instance.update
+        instance.update = update;
+
+        effect.scheduler = () => {
+            queueJob(update);
+        };
+
+        update();
+    };
+
+    /**
+     * 组件的挂载
+     * 1. 创建组件实例
+     * 2. 初始化组件的状态
+     * 3. 将组件挂载到页面上
+     * @param vnode
+     * @param container
+     * @param anchor
+     */
+    const mountComponent = (vnode, container, anchor) => {
+        // 创建组件实例
+        const instance = createComponentInstance(vnode);
+
+        // 初始化组件状态
+        setupComponent(instance);
+
+        // 将组件挂载到页面上，并这是 effect ,和响应式数据关联起来
+        setupRenderEffect(instance, container, anchor);
     };
 
     /**

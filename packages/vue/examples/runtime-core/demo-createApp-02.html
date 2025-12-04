@@ -40,13 +40,29 @@
 
                 btn.addEventListener('click', function () {
                     count.value++
+                    count.value++
+                    count.value++
+
+                    // nextTick(() => {
+                    //     const container = document.querySelector('#container')
+
+                    //     console.log('++++++', container.innerHTML)
+
+                    // })
                 })
 
-                return () => (h('div', {
-                    onClick: () => {
-                        count.value++
-                    }
-                }, count.value))
+                return function () {
+                    console.count('render')
+                    this.$nextTick(() => {
+                        console.log(document.querySelector('#container').textContent)
+                    })
+                    return h('div', {
+                        id: 'container',
+                        onClick: () => {
+                            count.value++
+                        }
+                    }, count.value)
+                }
             }
         }
 
