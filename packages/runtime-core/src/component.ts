@@ -1,6 +1,6 @@
 import { proxyRefs } from '@vue/reactivity';
 import { initProps, normalizePropsOptions } from './componentProps';
-import { isFunction } from '@vue/shared';
+import { hasOwn, isFunction, isObject } from '@vue/shared';
 
 /**
  * 创建组件实例
@@ -8,21 +8,27 @@ import { isFunction } from '@vue/shared';
  */
 export function createComponentInstance(vnode) {
     const { type } = vnode;
-    const instance = {
+    const instance: any = {
         type,
         vnode,
         // 渲染函数
         render: null,
         // setup返回的状态
         setupState: null,
+        // instance 的代理对象
+        proxy: null,
         propsOptions: normalizePropsOptions(type.props),
         props: {},
         attrs: {},
+        slots: {},
+        refs: {},
         // 子树， 就是 render 的返回值
         subTree: null,
         // 组件是否挂载
         isMounted: false,
     };
+
+    instance.ctx = { _: instance };
 
     return instance;
 }
@@ -36,19 +42,106 @@ export function setupComponent(instance) {
      * 初始化属性
      */
     initProps(instance);
+
+    setupStateFulComponent(instance);
+}
+
+const publicPropertiesMap = {
+    $attrs: instance => instance.attrs,
+    $slots: instance => instance.slots,
+    $refs: instance => instance.refs,
+    $nextTick: instance => {
+        // TODO: nextTick
+    },
+};
+
+const publicInstanceProxyHandlers = {
+    get(target, key) {
+        const { _: instance } = target;
+        const { setupState, props } = instance;
+
+        /**
+         * 访问 key 的时候
+         * 先去 setupState 中找
+         * 没找到，再去 props 中找
+         */
+
+        if (hasOwn(setupState, key)) {
+            return setupState[key];
+        }
+
+        if (hasOwn(props, key)) {
+            return props[key];
+        }
+
+        /**
+         * key 在 publicPropertiesMap 中
+         * eg: $attrs $refs $slots ....
+         */
+        if (hasOwn(publicPropertiesMap, key)) {
+            const publicGetter = publicPropertiesMap[key];
+            return publicGetter(instance);
+        }
+
+        /**
+         * 以上均未找到
+         */
+
+        return instance[key];
+    },
+
+    set(target, key, value) {
+        const { _: instance } = target;
+
+        const { setupState } = instance;
+
+        /**
+         * 修改 setupState
+         */
+        if (hasOwn(setupState, key)) {
+            setupState[key] = value;
+        }
+
+        return true;
+    },
+};
+
+function setupStateFulComponent(instance) {
     const { type } = instance;
 
-    const setupContext = createSetupContext(instance);
+    /**
+     * 创建代理对象，内部访问 setupState props $attrs $slots ....
+     */
+    instance.proxy = new Proxy(instance.ctx, publicInstanceProxyHandlers);
 
     if (isFunction(type.setup)) {
-        const setupResult = proxyRefs(type.setup(instance.props, setupContext));
+        const setupContext = createSetupContext(instance);
 
-        // 拿到 setup 返回的状态
-        instance.setupState = setupResult;
+        // 保存 setupContext
+        instance.setupContext = setupContext;
+
+        const setupResult = type.setup(instance.props, setupContext);
+
+        handSetupResult(instance, setupResult);
     }
 
-    // 将 runder 函数给到 instance
-    instance.render = type.render;
+    if (!instance.render) {
+        /**
+         * 如果上面处理完，没有 render (setupResult不是function)，
+         * 将 runder 函数给到 instance
+         */
+        instance.render = type.render;
+    }
+}
+
+function handSetupResult(instance, setupResult) {
+    if (isFunction(setupResult)) {
+        // 如果 setupResult 是函数，就认定是render
+        instance.render = setupResult;
+    } else if (isObject(setupResult)) {
+        // 如果反悔了对象，就是状态 拿到 setup 返回的状态
+        instance.setupState = proxyRefs(setupResult);
+    }
 }
 
 /**

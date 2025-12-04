@@ -425,7 +425,7 @@ export function createRenderer(options) {
 
             if (!instance.isMounted) {
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = instance.render.call(instance.setupState);
+                const subTree = instance.render.call(instance.proxy);
 
                 // 将 subTree 挂载到 container 上
                 patch(null, subTree, container, anchor);

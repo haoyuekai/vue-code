@@ -36,25 +36,17 @@
             },
             setup(props, { attrs }) {
 
-                console.log('props:', props)
-                console.log('attrs:', attrs)
-
                 const count = ref(1)
 
                 btn.addEventListener('click', function () {
                     count.value++
                 })
 
-                return { count }
-            },
-            render() {
-                console.log('....', this.msg)
-                return h('div', {
+                return () => (h('div', {
                     onClick: () => {
-                        console.log(111)
-                        this.count++
+                        count.value++
                     }
-                }, this.count)
+                }, count.value))
             }
         }
 
