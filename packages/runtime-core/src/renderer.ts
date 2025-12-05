@@ -4,6 +4,8 @@ import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
 import { ReactiveEffect } from '@vue/reactivity';
 import { queueJob } from './scheduler';
+import { shouldUpdateComponent } from './componentRenderUtils';
+import { updateProps } from './componentProps';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -405,30 +407,66 @@ export function createRenderer(options) {
         }
     };
 
+    /**
+     * 复用组件实例
+     * 更新 props
+     * 更新 slots
+     *
+     * @param instance
+     * @param nextVnode
+     */
+    const updateComponentPreRender = (instance, nextVnode) => {
+        // 更新虚拟节点
+        instance.vnode = nextVnode;
+        instance.next = null;
+        /**
+         * 更新组件的属性
+         * props 和 attrs
+         */
+        updateProps(instance, nextVnode);
+    };
+
     const setupRenderEffect = (instance, container, anchor) => {
         const componentUpdateFn = () => {
             /**
              * 区分挂载和更新 instance.isMounted
              */
-
             if (!instance.isMounted) {
+                const { vnode, render } = instance;
+
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = instance.render.call(instance.proxy);
+                const subTree = render.call(instance.proxy);
 
                 // 将 subTree 挂载到 container 上
                 patch(null, subTree, container, anchor);
+
+                // 组件的 vnode 的 el 会指向 subTree 的 el
+                vnode.el = subTree.el;
 
                 // 保存子树
                 instance.subTree = subTree;
                 // 标记已挂载
                 instance.isMounted = true;
             } else {
+                let { vnode, render, next } = instance;
+
+                if (next) {
+                    // 父组件传递的属性触发的更新
+                    updateComponentPreRender(instance, next);
+                } else {
+                    // 自身属性触发的更新，没有next，就用之前的
+                    next = vnode;
+                }
+
                 const prevSubTree = instance.subTree;
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = instance.render.call(instance.proxy);
+                const subTree = render.call(instance.proxy);
 
                 // 将 subTree 挂载到 container 上
                 patch(prevSubTree, subTree, container, anchor);
+
+                // 组件的 vnode 的 el 会指向 subTree 的 el
+                next.el = subTree.el;
 
                 // 保存子树
                 instance.subTree = subTree;
@@ -462,12 +500,42 @@ export function createRenderer(options) {
         // 创建组件实例
         const instance = createComponentInstance(vnode);
 
+        // 保存组件实例 到 虚拟节点，方便后续复用（对比 dom节点 保存 el）
+        vnode.component = instance;
+
         // 初始化组件状态
         setupComponent(instance);
 
         // 将组件挂载到页面上，并这是 effect ,和响应式数据关联起来
         setupRenderEffect(instance, container, anchor);
     };
+
+    /**
+     * 组件更新
+     * 复用组件实例（dom更新复用el）
+     * @param n1
+     * @param n2
+     */
+    function updateComponent(n1, n2) {
+        const instance = (n2.component = n1.component);
+
+        /**
+         * 该更新 props 或者 slots 发生了变化
+         * 父组件其他子节点发生变化 parent h('div', [h(Child, { age: 0 }), age.value])
+         */
+
+        if (shouldUpdateComponent(n1, n2)) {
+            // 绑定新的虚拟节点 ==> instance
+            instance.next = n2;
+
+            instance.update();
+        } else {
+            // 复用元素
+            n2.el = n1.el;
+            // 更新虚拟节点
+            instance.vnode = n2;
+        }
+    }
 
     /**
      * 组件节点的挂载和更新
@@ -482,6 +550,7 @@ export function createRenderer(options) {
             mountComponent(n2, container, anchor);
         } else {
             // 更新
+            updateComponent(n1, n2);
         }
     };
 

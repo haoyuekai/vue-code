@@ -6,7 +6,7 @@ import { hasOwn, isArray } from '@vue/shared';
  * @param props
  * @returns
  */
-export function normalizePropsOptions(props) {
+export function normalizePropsOptions(props = {}) {
     if (isArray(props)) {
         /**
          * 把数组转换成对象
@@ -23,6 +23,13 @@ export function normalizePropsOptions(props) {
     return props;
 }
 
+/**
+ * 设置所有的 props  attrs
+ * @param instance
+ * @param rawProps
+ * @param props
+ * @param attrs
+ */
 function setFullProps(instance, rawProps, props, attrs) {
     const propsOptions = instance.propsOptions;
     if (rawProps) {
@@ -51,4 +58,32 @@ export function initProps(instance) {
     // props是响应式的，attrs不是响应式的
     instance.props = reactive(props);
     instance.attrs = attrs;
+}
+
+/**
+ * 更新组件的属性
+ * props 和 attrs
+ */
+export function updateProps(instance, nextVnode) {
+    const { props, attrs } = instance;
+    // 用户传入的 props，处理成响应式的 props 和 attrs
+    const rawProps = nextVnode.props;
+    /**
+     * 设置所有的 props 和 attrs
+     */
+    setFullProps(instance, rawProps, props, attrs);
+
+    /**
+     * 删除不需要的（之前有，现在没有的 props 和 attrs）
+     */
+    for (const key in props) {
+        if (!hasOwn(rawProps, key)) {
+            delete props[key];
+        }
+    }
+    for (const key in attrs) {
+        if (!hasOwn(rawProps, key)) {
+            delete attrs[key];
+        }
+    }
 }

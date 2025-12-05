@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <button id="btn">按钮</button>
+
+    <script type="module">
+        import {
+            // h,
+            // ref,
+            // createApp
+        } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import { h, ref, createApp } from '../../dist/vue.esm.js';
+
+        const Child = {
+            props: ['age'],
+            setup(props) {
+                return () => { // render
+                    return h('div', ['子组件---', '年龄：', props.age])
+                }
+            }
+        }
+
+        /**
+         * 属性
+         * props
+         * attrs 
+         */
+        const Comp = {
+            setup(props, { attrs }) {
+                const age = ref(1)
+                btn.addEventListener('click', function () {
+                    age.value++
+                })
+                return () => {
+                    return h(Child, { age: age.value })
+                }
+            }
+        }
+
+        const App = createApp(Comp, { msg: 'hello' })
+        App.mount(app)
+
+
+    </script>
+</body>
+
+</html>
