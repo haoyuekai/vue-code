@@ -27,8 +27,15 @@
         const Child = {
             props: ['age'],
             setup(props) {
+
+                const count = ref(0)
+
                 return () => { // render
-                    return h('div', ['子组件---', '年龄：', props.age])
+                    return h('div', {
+                        onClick() {
+                            count.value++
+                        }
+                    }, ['子组件:', count.value, '   年龄：', props.age])
                 }
             }
         }
