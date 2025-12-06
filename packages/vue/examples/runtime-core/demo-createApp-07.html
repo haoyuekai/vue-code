@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * ## 组件生命周期
+         * 挂载
+         * onBeforeMount
+         * onMounted
+         * 
+         * 更新
+         * onBeforeUpdate
+         * onUpdated
+         * 
+         * 卸载
+         * onBeforeUnmount
+         * onUnmounted
+         */
+
+        import {
+            // h,
+            // ref,
+            // createApp,
+            // getCurrentInstance,
+            // onBeforeMount,
+            // onMounted,
+            // onBeforeUpdate,
+            // onUpdated,
+            // onBeforeUnmount,
+            // onUnmounted,
+        } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            getCurrentInstance,
+            onBeforeMount,
+            onMounted,
+            onBeforeUpdate,
+            onUpdated,
+            onBeforeUnmount,
+            onUnmounted,
+        } from '../../dist/vue.esm.js';
+
+        const Child = {
+            props: ['count'],
+            setup(props) {
+                onBeforeMount(() => {
+                    console.log('子组件： before mount')
+                })
+
+                onMounted(() => {
+                    console.log('子组件： mounted')
+                })
+
+                onBeforeUpdate(() => {
+                    console.log('子组件： before update')
+                })
+
+                onUpdated(() => {
+                    console.log('子组件： updated')
+                })
+
+                onBeforeUnmount(() => {
+                    console.log('子组件： before unmount')
+                })
+
+                onUnmounted(() => {
+                    console.log('子组件： unmount')
+                })
+
+                return () => {
+                    return h('div', {
+                        'data-content': '子组件'
+                    }, [
+                        "子组件", props.count
+                    ])
+                }
+            }
+        }
+
+
+        const Comp = {
+            setup(props) {
+
+                const count = ref(0)
+
+                setTimeout(() => {
+                    count.value++
+                }, 2000)
+
+                onBeforeMount(() => {
+                    console.log('-----挂载-----')
+                    console.log('父组件： before mount')
+                })
+
+                onMounted(() => {
+                    console.log('父组件： mounted')
+                    console.log('-----挂载-----')
+
+                    const container = document.querySelector('#container')
+                    console.log('获取组件 DOM =>', container)
+                    console.log('获取组件 实例 =>', getCurrentInstance())
+                })
+
+                onBeforeUpdate(() => {
+                    console.log('-----更新-----')
+                    console.log('父组件： before update')
+                })
+
+                onUpdated(() => {
+                    console.log('父组件： updated')
+                    console.log('-----更新-----')
+                })
+
+                onBeforeUnmount(() => {
+                    console.log('-----卸载-----')
+                    console.log('父组件： before unmount')
+                })
+
+                onUnmounted(() => {
+                    console.log('父组件： unmounted')
+                    console.log('-----卸载-----')
+                })
+
+                return () => {
+                    return h('div', {
+                        'data-content': "父组件"
+                    }, [
+                        h('p', { id: 'container' }, '父组件'),
+                        count.value,
+                        h(Child, { count: count.value })
+                    ])
+                }
+            }
+        }
+
+        const App = createApp(Comp, { msg: 'hello' })
+        App.mount('#app')
+
+        setTimeout(() => {
+            App.unmount()
+        }, 4000)
+
+    </script>
+</body>
+
+</html>

@@ -7,6 +7,8 @@ import { queueJob } from './scheduler';
 import { shouldUpdateComponent } from './componentRenderUtils';
 import { updateProps } from './componentProps';
 import { updateSlots } from './componentSlots';
+import { trigger } from 'packages/reactivity/src/dep';
+import { LifecycleHooks, triggerHooks } from './apiLifecycle';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -40,13 +42,35 @@ export function createRenderer(options) {
     };
 
     /**
+     * 组件卸载
+     * @param instance
+     */
+    const unmountComponent = instance => {
+        /**
+         * 卸载前 触发 onBeforeUnmount
+         */
+        triggerHooks(instance, LifecycleHooks.BEFORE_UNMOUNT);
+
+        // 把 subTree 卸载掉
+        unmount(instance.subTree);
+
+        /**
+         * 卸载后 触发 onUnmounted
+         */
+        triggerHooks(instance, LifecycleHooks.UNMOUNTED);
+    };
+
+    /**
      * 卸载
      * @param vnode
      */
     const unmount = vnode => {
         const { el, shapeFlag, children } = vnode;
 
-        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        if (shapeFlag & ShapeFlags.COMPONENT) {
+            // 组件
+            unmountComponent(vnode.component);
+        } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 子节点是数组
 
             unmountChildren(children);
@@ -438,7 +462,14 @@ export function createRenderer(options) {
              * 区分挂载和更新 instance.isMounted
              */
             if (!instance.isMounted) {
+                // 挂载的逻辑
+
                 const { vnode, render } = instance;
+
+                /**
+                 * 挂载前 onBeforeMount
+                 */
+                triggerHooks(instance, LifecycleHooks.BEFORE_MOUNT);
 
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
                 const subTree = render.call(instance.proxy);
@@ -453,7 +484,14 @@ export function createRenderer(options) {
                 instance.subTree = subTree;
                 // 标记已挂载
                 instance.isMounted = true;
+
+                /**
+                 * 挂载完成 onMounted
+                 */
+                triggerHooks(instance, LifecycleHooks.MOUNTED);
             } else {
+                // 更新的逻辑
+
                 let { vnode, render, next } = instance;
 
                 if (next) {
@@ -463,6 +501,11 @@ export function createRenderer(options) {
                     // 自身属性触发的更新，没有next，就用之前的
                     next = vnode;
                 }
+
+                /**
+                 * 更新前 onBeforeUpdate
+                 */
+                triggerHooks(instance, LifecycleHooks.BEFROE_UPDATE);
 
                 const prevSubTree = instance.subTree;
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
@@ -476,6 +519,11 @@ export function createRenderer(options) {
 
                 // 保存子树
                 instance.subTree = subTree;
+
+                /**
+                 * 更新后 onUpdated
+                 */
+                triggerHooks(instance, LifecycleHooks.UPDATED);
             }
         };
 
