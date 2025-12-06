@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * 组件插槽
+         */
+
+        // import {
+        //     h,
+        //     ref,
+        //     createApp
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import { h, ref, createApp } from '../../dist/vue.esm.js';
+
+        const Child = {
+            setup(props, { slots }) {
+                return () => { // render
+                    return h('div', {
+                        'data-content': "子组件"
+                    }, [
+                        '子组件自己的内容',
+                        slots.default(),
+                    ])
+                }
+            }
+        }
+
+        const Comp = {
+            setup() {
+                return () => {
+
+                    /**
+                     * 插槽分三种：
+                     * 匿名插槽 => 默认插槽
+                     * 具名插槽 => header  footer ...
+                     * 作用域插槽 => 可以传参数（函数传参）
+                     */
+
+                    /**
+                     * <Child>
+                     *  <template #header>
+                     *    ....
+                     *  </template>
+                     * </Child> 
+                     */
+                    // return h('div', {
+                    //     'data-content': "父组件"
+                    // }, [
+                    //     h('p', '父组件的 P 标签'),
+                    //     h(Child, null, {
+                    //         // 具名插槽
+                    //         header: () => h('div', '父组件传递的插槽 header'),
+                    //         // 默认插槽
+                    //         default: () => h('div', '默认插槽'),
+                    //         // 作用域插槽
+                    //         footer: ({ a }) => h('div', '父组件传递的插槽 footer' + ' ' + a),
+                    //     })
+                    // ])
+                    return h('div', {
+                        'data-content': "父组件"
+                    }, [
+                        h('p', '父组件的 P 标签'),
+                        h(Child, null, () => h('div', '默认插槽 '))
+                    ])
+                }
+            }
+        }
+
+        const App = createApp(Comp, { msg: 'hello' })
+        App.mount(app)
+
+
+    </script>
+</body>
+
+</html>

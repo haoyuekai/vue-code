@@ -1,4 +1,11 @@
-import { isArray, isNumber, isObject, isString, ShapeFlags } from '@vue/shared';
+import {
+    isArray,
+    isFunction,
+    isNumber,
+    isObject,
+    isString,
+    ShapeFlags,
+} from '@vue/shared';
 
 /**
  * 文本节点标记
@@ -31,12 +38,39 @@ export function normalizeVNode(vnode) {
  * 标准化children
  * @param children
  */
-function normalizeChildren(children) {
-    if (isNumber(children)) {
-        // 数字转为字符串
+function normalizeChildren(vnode, children) {
+    let { shapeFlag } = vnode;
+
+    if (isArray(children)) {
+        shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
+    } else if (isObject(children)) {
+        /**
+         * eg: children = {header: () => h('div', '插槽 header')}
+         */
+        if (shapeFlag & ShapeFlags.COMPONENT) {
+            // 如果是个组件，那就是插槽
+            shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
+        }
+    } else if (isFunction(children)) {
+        /**
+         * eg: children = () => h('div', '默认插槽')
+         */
+        if (shapeFlag & ShapeFlags.COMPONENT) {
+            // 如果是个组件，那就是插槽
+            shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
+            children = { default: children };
+        }
+    } else if (isString(children) || isNumber(children)) {
         children = String(children);
+        shapeFlag |= ShapeFlags.TEXT_CHILDREN;
     }
 
+    /**
+     * 处理完成后重新赋值
+     */
+
+    vnode.shapeFlag = shapeFlag;
+    vnode.children = children;
     return children;
 }
 
@@ -47,10 +81,9 @@ function normalizeChildren(children) {
  * @param children 子节点
  */
 export function createVNode(type, props?, children = null) {
-    children = normalizeChildren(children);
-
     let shapeFlag = 0;
 
+    // 处理 type 上的 shapeFlag
     if (isString(type)) {
         shapeFlag = ShapeFlags.ELEMENT;
     } else if (isObject(type)) {
@@ -58,24 +91,23 @@ export function createVNode(type, props?, children = null) {
         shapeFlag = ShapeFlags.STATEFUL_COMPONENT;
     }
 
-    if (isString(children)) {
-        shapeFlag |= ShapeFlags.TEXT_CHILDREN;
-    } else if (isArray(children)) {
-        shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
-    }
-
     const vnode = {
         // 虚拟节点标识
         __v_isVNode: true,
         type,
         props,
-        children,
+        children: null,
         // 做 diff 用
         key: props?.key,
         // 虚拟节点要挂载的节点
         el: null,
         shapeFlag,
     };
+
+    /**
+     * 处理 children 的 标准化 和 shapeFlag
+     */
+    children = normalizeChildren(vnode, children);
 
     return vnode;
 }
