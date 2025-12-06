@@ -134,7 +134,18 @@ function setupStatefulComponent(instance) {
         // 保存 setupContext
         instance.setupContext = setupContext;
 
+        /**
+         * 设置当前组件实例
+         */
+        setCurrentInstance(instance);
+
+        // 执行 setup 函数
         const setupResult = type.setup(instance.props, setupContext);
+
+        /**
+         * 清除当前组件实例
+         */
+        unSetCurrentInstance();
 
         handSetupResult(instance, setupResult);
     }
@@ -199,4 +210,30 @@ function emit(instance, event, ...args) {
     if (isFunction(handler)) {
         handler(...args);
     }
+}
+
+/**
+ * 当前组件实例
+ */
+let currentInstance = null;
+
+/**
+ * 设置当前组件实例
+ */
+export function setCurrentInstance(instance) {
+    currentInstance = instance;
+}
+
+/**
+ * 获取当前组件实例
+ */
+export function getCurrentInstance() {
+    return currentInstance;
+}
+
+/**
+ * 清除当前组件实例
+ */
+function unSetCurrentInstance() {
+    currentInstance = null;
 }
