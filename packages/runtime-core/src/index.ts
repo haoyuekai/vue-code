@@ -8,3 +8,6 @@ export * from './component';
 export * from './apiLifecycle';
 export * from './useTemplateRef';
 export * from './apiInject';
+
+// 组件
+export * from './components/Teleport';

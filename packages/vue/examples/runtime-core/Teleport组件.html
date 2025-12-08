@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div id="container"></div>
+
+    <script type="module">
+        // import {
+        //     h,
+        //     ref,
+        //     createApp,
+        //     Teleport,
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            Teleport,
+        } from '../../dist/vue.esm.js';
+
+        const Child = {
+            setup() {
+                return () => {
+                    return h('div', ["子组件"])
+                }
+            }
+        }
+
+        const App = {
+            name: 'App',
+            setup() {
+                const list = ref([1, 2])
+                const to = ref('body')
+                const disabled = ref(false)
+                setTimeout(() => {
+                    list.value.push(3)
+                    // 2s后放到 container 中
+                    // to.value = '#container'
+                    disabled.value = true
+                }, 2000)
+
+                return () => {
+                    return h('div', [
+                        h('p', "父组件的P标签"),
+                        h(Child),
+                        h(Teleport, {
+                            to: to.value,
+                            disabled: disabled.value,
+                        }, list.value.map(item => h('div', item)))
+                    ])
+                }
+            }
+        }
+
+        const app = createApp(App)
+        app.mount('#app')
+
+        setTimeout(() => {
+            app.unmount()
+        }, 3000)
+
+    </script>
+</body>
+
+</html>

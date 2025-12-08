@@ -68,11 +68,16 @@ export function createRenderer(options) {
      * @param vnode
      */
     const unmount = vnode => {
-        const { el, shapeFlag, children, ref } = vnode;
+        const { el, shapeFlag, children, type, ref } = vnode;
 
         if (shapeFlag & ShapeFlags.COMPONENT) {
             // 组件
             unmountComponent(vnode.component);
+        } else if (shapeFlag & ShapeFlags.TELEPORT) {
+            // Teleport组件
+            // 源码：type.remove(...);
+            unmountChildren(children);
+            return;
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 子节点是数组
 
@@ -179,10 +184,9 @@ export function createRenderer(options) {
      *  c. 老的是null
      * @param n1
      * @param n2
+     * @param el
      */
-    const patchChildren = (n1, n2, parentComponent) => {
-        const el = n2.el;
-
+    const patchChildren = (n1, n2, el, parentComponent) => {
         const prevShapeFlag = n1.shapeFlag;
         const shapeFlag = n2.shapeFlag;
 
@@ -409,7 +413,7 @@ export function createRenderer(options) {
         patchProps(el, oldProps, newProps);
 
         // 更新 children
-        patchChildren(n1, n2, parentComponent);
+        patchChildren(n1, n2, el, parentComponent);
     };
 
     /**
@@ -685,6 +689,13 @@ export function createRenderer(options) {
                         anchor,
                         parentComponent,
                     );
+                } else if (shapeFlag & ShapeFlags.TELEPORT) {
+                    // Teleport 组件
+                    type.process(n1, n2, container, anchor, parentComponent, {
+                        mountChildren,
+                        patchChildren,
+                        options,
+                    });
                 }
                 break;
         }
