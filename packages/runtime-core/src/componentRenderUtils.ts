@@ -1,3 +1,8 @@
+import {
+    setCurrentRenderInstance,
+    unsetCurrentRenderInstance,
+} from './component';
+
 /**
  * 对比两次的 props 是否发生改变
  * @param prevProps
@@ -50,4 +55,14 @@ export function shouldUpdateComponent(n1, n2) {
      */
 
     return hasPropsChanged(prevProps, nextProps);
+}
+
+export function renderComponentRoot(instance) {
+    // render 之前设置当前组件实例
+    setCurrentRenderInstance(instance);
+    const subTree = instance.render.call(instance.proxy);
+    // render 调用完了，清空当前组件实例
+    unsetCurrentRenderInstance();
+
+    return subTree;
 }

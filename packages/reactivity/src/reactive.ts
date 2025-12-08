@@ -25,6 +25,11 @@ function createReactiveObject(target) {
         return target;
     }
 
+    // 如果 target 是 dom 元素，直接返回
+    if (target instanceof HTMLElement) {
+        return target;
+    }
+
     // 如果reactiveSet中有target,说明target本身是响应式对象，直接返回
     if (isReactive(target)) {
         return target;

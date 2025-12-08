@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * ## 组件的 ref 和 expose
+         */
+
+        // import {
+        //     h,
+        //     ref,
+        //     getCurrentInstance,
+        //     createApp,
+        //     onMounted,
+        //     useTemplateRef,
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            getCurrentInstance,
+            onMounted,
+            useTemplateRef,
+        } from '../../dist/vue.esm.js';
+
+        const Child = {
+            setup(props, { attrs, slots, emit, expose }) {
+
+                /**
+                 * 如果手动调用了 expose 那么父组件通过 ref 获取到组件实例的时候，
+                 * 只能获取到 expose 暴露的属性和 $attr $props $slots
+                 * 
+                 * 如果没有调用 expose 那么父组件通过 ref 可以获取到子组件的 insance.proxy
+                 */
+                expose({
+                    a: ref(1),
+                    foo() {
+                        console.log('子组件暴露的 foo ')
+                    }
+                })
+
+                return () => {
+                    return h('div', {
+                        'data-content': '子组件',
+                        ref: 'child-dom'
+                    }, ["子组件"])
+                }
+            }
+        }
+
+
+        const Comp = {
+            setup(props) {
+                // const elRef = ref()
+                // const childRef = ref()
+
+                // const vm = getCurrentInstance()
+
+                // onMounted(() => {
+                //     // console.log('父组件元素', elRef.value)
+                //     console.log('父组件元素', vm.proxy.$refs.elRef)
+
+                //     // const { a } = childRef.value
+                //     const { a } = vm.proxy.$refs.childRef
+
+                //     console.log('子组件元素', a)
+
+                // })
+
+                // const flag = ref(true);
+                // setTimeout(() => {
+                //     flag.value = false
+                // }, 13000)
+
+                onMounted(() => {
+                    const el = useTemplateRef('elRef');
+                    console.log('子组件----', el, el.value)
+                })
+
+                return () => {
+                    return h('div', {
+                        'data-content': "父组件",
+                        ref: 'el'
+                    }, [
+                        h('p', { id: 'container', ref: 'elRef' }, '父组件'),
+                        // flag.value
+                        //     ? h(Child, {
+                        //         conunt: 1,
+                        //         ref: 'childRef'
+                        //     })
+                        //     : ''
+                    ])
+                }
+            }
+        }
+
+        const App = createApp(Comp, { msg: 'hello' })
+        App.mount('#app')
+
+    </script>
+</body>
+
+</html>

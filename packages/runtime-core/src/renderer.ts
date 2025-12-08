@@ -4,11 +4,14 @@ import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
 import { ReactiveEffect } from '@vue/reactivity';
 import { queueJob } from './scheduler';
-import { shouldUpdateComponent } from './componentRenderUtils';
+import {
+    renderComponentRoot,
+    shouldUpdateComponent,
+} from './componentRenderUtils';
 import { updateProps } from './componentProps';
 import { updateSlots } from './componentSlots';
-import { trigger } from 'packages/reactivity/src/dep';
 import { LifecycleHooks, triggerHooks } from './apiLifecycle';
+import { setRef } from './renderTemplateRef';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -65,7 +68,7 @@ export function createRenderer(options) {
      * @param vnode
      */
     const unmount = vnode => {
-        const { el, shapeFlag, children } = vnode;
+        const { el, shapeFlag, children, ref } = vnode;
 
         if (shapeFlag & ShapeFlags.COMPONENT) {
             // 组件
@@ -77,6 +80,10 @@ export function createRenderer(options) {
         }
         // 移除之前挂载时dom
         hostRemove(el);
+
+        if (ref != null) {
+            setRef(ref, null);
+        }
     };
 
     /**
@@ -113,6 +120,7 @@ export function createRenderer(options) {
         // 设置props
         if (props) {
             for (const key in props) {
+                if (key === 'ref') continue;
                 hoostPatchProp(el, key, null, props[key]);
             }
         }
@@ -151,8 +159,9 @@ export function createRenderer(options) {
         }
 
         if (newProps) {
-            // 新的 props 全干掉
+            // 新的 props 全设置上
             for (const key in newProps) {
+                if (key === 'ref') continue;
                 hoostPatchProp(el, key, oldProps?.[key], newProps[key]);
             }
         }
@@ -472,7 +481,7 @@ export function createRenderer(options) {
                 triggerHooks(instance, LifecycleHooks.BEFORE_MOUNT);
 
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = render.call(instance.proxy);
+                const subTree = renderComponentRoot(instance);
 
                 // 将 subTree 挂载到 container 上
                 patch(null, subTree, container, anchor);
@@ -509,7 +518,7 @@ export function createRenderer(options) {
 
                 const prevSubTree = instance.subTree;
                 // 调用 render 拿到 subTree , this 指向 instance.setupState
-                const subTree = render.call(instance.proxy);
+                const subTree = renderComponentRoot(instance);
 
                 // 将 subTree 挂载到 container 上
                 patch(prevSubTree, subTree, container, anchor);
@@ -633,7 +642,7 @@ export function createRenderer(options) {
          * 文本
          * 组件
          */
-        const { shapeFlag, type } = n2;
+        const { shapeFlag, type, ref } = n2;
 
         switch (type) {
             case Text:
@@ -647,6 +656,10 @@ export function createRenderer(options) {
                     processComponent(n1, n2, container, anchor);
                 }
                 break;
+        }
+
+        if (ref != null) {
+            setRef(ref, n2);
         }
     };
 

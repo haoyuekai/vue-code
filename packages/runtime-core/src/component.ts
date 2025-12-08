@@ -145,7 +145,7 @@ function setupStatefulComponent(instance) {
         /**
          * 清除当前组件实例
          */
-        unSetCurrentInstance();
+        unsetCurrentInstance();
 
         handSetupResult(instance, setupResult);
     }
@@ -188,7 +188,47 @@ function createSetupContext(instance) {
 
         // 插槽
         slots: instance.slots,
+
+        // 暴露属性
+        expose(exposed) {
+            // 把用户传递的对象，保存到当前实例上
+            instance.exposed = exposed;
+        },
     };
+}
+
+/**
+ * 获取到组件公开的属性
+ * @param instance
+ * @returns
+ */
+export function getComponentPublicInstance(instance) {
+    if (instance.exposed) {
+        /**
+         * 用户可以使用 exposed 和 publicPropertiesMap
+         */
+        if (instance.exposedProxy) {
+            return instance.exposedProxy;
+        }
+
+        // 创建代理对象，使用 publicPropertiesMap
+        instance.exposedProxy = new Proxy(proxyRefs(instance.exposed), {
+            get(target, key) {
+                if (key in target) {
+                    return target[key];
+                }
+
+                if (key in publicPropertiesMap) {
+                    return publicPropertiesMap[key](instance);
+                }
+            },
+        });
+
+        return instance.exposedProxy;
+    } else {
+        // 如果没有暴露，返回代理对象
+        return instance.proxy;
+    }
 }
 
 /**
@@ -234,6 +274,33 @@ export function getCurrentInstance() {
 /**
  * 清除当前组件实例
  */
-export function unSetCurrentInstance() {
+export function unsetCurrentInstance() {
     currentInstance = null;
+}
+
+/**
+ * 当前正在渲染的组件实例，源码未暴露
+ */
+let currentRenderInstance = null;
+
+/**
+ * 设置当前正在渲染的组件实例
+ * @param instance
+ */
+export function setCurrentRenderInstance(instance) {
+    currentRenderInstance = instance;
+}
+
+/**
+ * 清除当前正在渲染的组件实例
+ */
+export function unsetCurrentRenderInstance() {
+    currentRenderInstance = null;
+}
+
+/**
+ * 获取当前正在渲染的组件实例
+ */
+export function getCurrentRenderingInstance() {
+    return currentRenderInstance;
 }

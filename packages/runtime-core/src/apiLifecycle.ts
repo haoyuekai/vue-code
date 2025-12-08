@@ -1,7 +1,7 @@
 import {
     getCurrentInstance,
     setCurrentInstance,
-    unSetCurrentInstance,
+    unsetCurrentInstance,
 } from './component';
 
 export enum LifecycleHooks {
@@ -42,7 +42,7 @@ function injectHook(target, hook, type) {
         setCurrentInstance(target);
         hook();
         // 执行之后清空 currentInstance
-        unSetCurrentInstance();
+        unsetCurrentInstance();
     };
 
     // 保存 hook
