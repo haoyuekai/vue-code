@@ -185,6 +185,7 @@ export function createRenderer(options) {
      * @param n1
      * @param n2
      * @param el
+     * @param parentComponent
      */
     const patchChildren = (n1, n2, el, parentComponent) => {
         const prevShapeFlag = n1.shapeFlag;

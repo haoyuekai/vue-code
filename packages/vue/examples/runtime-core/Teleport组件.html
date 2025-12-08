@@ -54,11 +54,13 @@
                 return () => {
                     return h('div', [
                         h('p', "父组件的P标签"),
-                        h(Child),
                         h(Teleport, {
                             to: to.value,
                             disabled: disabled.value,
-                        }, list.value.map(item => h('div', item)))
+                        }, [
+                            ...list.value.map(item => h('div', item)),
+                            h(Child),
+                        ])
                     ])
                 }
             }
@@ -69,7 +71,7 @@
 
         setTimeout(() => {
             app.unmount()
-        }, 3000)
+        }, 5000)
 
     </script>
 </body>

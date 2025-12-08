@@ -64,6 +64,9 @@ export const Teleport = {
                 for (const child of n2.children) {
                     insert(child.el, target);
                 }
+
+                // 复用target
+                n2.target = target;
             }
         }
     },
