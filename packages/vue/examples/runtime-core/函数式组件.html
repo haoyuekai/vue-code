@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * ## inject provide
+         */
+
+        // import {
+        //     h,
+        //     ref,
+        //     createApp,
+        //     provide,
+        //     inject,
+        //     getCurrentInstance
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            provide,
+            inject,
+            getCurrentInstance
+        } from '../../dist/vue.esm.js';
+
+        /**
+         * 如果没申明 props, 那么所有的属性都是 props
+         * 如果申明了， 申明过的放到 props, 其他的放到 attrs 里
+         */
+        function App(props, { attrs, emit }) {
+            console.log('props', props)
+            console.log('attrs', attrs)
+            emit('foo')
+            return h('div', props.msg)
+        }
+
+        // 申明 props
+        App.props = ['msg']
+
+        const app = createApp(App, { msg: 'Hello world', count: 0, onFoo() { console.log('foo') } })
+        app.mount('#app')
+
+
+    </script>
+</body>
+
+</html>

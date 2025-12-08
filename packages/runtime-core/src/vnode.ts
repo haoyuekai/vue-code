@@ -100,7 +100,11 @@ export function createVNode(type, props?, children = null) {
     } else if (isObject(type)) {
         // 有状态组件
         shapeFlag = ShapeFlags.STATEFUL_COMPONENT;
+    } else if (isFunction(type)) {
+        // 函数式组件
+        shapeFlag = ShapeFlags.FUNCTIONAL_COMPONENT;
     }
+
     const vnode = {
         // 虚拟节点标识
         __v_isVNode: true,

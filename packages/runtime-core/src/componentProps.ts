@@ -1,5 +1,5 @@
 import { reactive } from '@vue/reactivity';
-import { hasOwn, isArray } from '@vue/shared';
+import { hasOwn, isArray, ShapeFlags } from '@vue/shared';
 
 /**
  * props归一化函数
@@ -31,11 +31,28 @@ export function normalizePropsOptions(props = {}) {
  * @param attrs
  */
 function setFullProps(instance, rawProps, props, attrs) {
-    const propsOptions = instance.propsOptions;
+    const { propsOptions, vnode } = instance;
+    // 是不是函数式组件
+    const isFunctionalComponent =
+        vnode.shapeFlag & ShapeFlags.FUNCTIONAL_COMPONENT;
+    const hasProps = Object.keys(propsOptions).length > 0;
+
     if (rawProps) {
+        /**
+         * 函数式组件
+         * 如果没申明 props, 那么所有的属性都是 props
+         * 如果申明了， 申明过的放到 props, 其他的放到 attrs 里
+         *
+         * 有状态组件
+         * 申明过的放到 props, 其他的放到 attrs 里
+         */
+
         for (const key in rawProps) {
             const value = rawProps[key];
-            if (hasOwn(propsOptions, key)) {
+            if (
+                hasOwn(propsOptions, key) ||
+                (isFunctionalComponent && !hasProps)
+            ) {
                 // 如果 propsOptions 里面有这个 key, 应该放到 props 里面
                 props[key] = value;
             } else {
