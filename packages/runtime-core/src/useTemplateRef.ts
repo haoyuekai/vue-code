@@ -1,9 +1,8 @@
 import { ref } from '@vue/reactivity';
-import { getCurrentInstance, getCurrentRenderingInstance } from './component';
+import { getCurrentInstance } from './component';
 
 export function useTemplateRef(key) {
     const vm = getCurrentInstance();
-    // const vm = getCurrentRenderingInstance();
 
     const { refs } = vm;
 
