@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * ## inject provide
+         */
+
+        // import {
+        //     h,
+        //     ref,
+        //     createApp,
+        //     provide,
+        //     inject,
+        //     getCurrentInstance
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            provide,
+            inject,
+            getCurrentInstance
+        } from '../../dist/vue.esm.js';
+
+        const Child = {
+            setup() {
+
+                const count = inject('count', ref(0))
+                const random = inject('random', '默认值 ')
+                const a = inject('a', '默认值')
+                console.log('count:', count.value)
+                console.log('a:', a)
+
+                return () => {
+                    return h('div', {
+                        'data-content': '子组件'
+                    }, ["子组件", count.value, random.value])
+                }
+            }
+        }
+
+        const Comp = {
+            setup(props) {
+
+                const count = ref(1)
+
+                setInterval(() => {
+                    count.value++
+                }, 2000)
+
+                provide('count', count)
+                const aa = inject('count', '默认值')
+                console.log('aa', aa)
+
+                // console.log(getCurrentInstance().provides === App.context.provides)
+
+                return () => {
+                    return h('div', {
+                        'data-content': "父组件",
+                    }, [
+                        h('p', { id: 'container' }, '父组件P标签'),
+                        h(Child)
+                    ])
+                }
+            }
+        }
+
+        const App = createApp(Comp)
+
+        const random = ref(0);
+        setInterval(() => {
+            random.value = Math.floor(Math.random() * 100)
+        }, 1500)
+
+
+        App.provide('random', random)
+
+        App.mount('#app')
+
+
+    </script>
+</body>
+
+</html>

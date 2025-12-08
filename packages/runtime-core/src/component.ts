@@ -35,6 +35,8 @@ export function createComponentInstance(vnode, parent) {
         subTree: null,
         // 组件是否挂载
         isMounted: false,
+
+        provides: parent ? parent.provides : appContext.provides,
     };
 
     instance.ctx = { _: instance };

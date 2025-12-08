@@ -11,6 +11,7 @@ export function createAppAPI(render) {
         };
 
         const app = {
+            context,
             _container: null,
 
             // 挂载
@@ -33,6 +34,10 @@ export function createAppAPI(render) {
             // 卸载
             unmount() {
                 render(null, app._container);
+            },
+
+            provide(key, value) {
+                context.provides[key] = value;
             },
         };
 
