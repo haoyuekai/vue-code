@@ -114,6 +114,7 @@ export function createVNode(type, props?, children = null) {
         shapeFlag,
         // 绑定 ref
         ref: normalizeRef(props?.ref),
+        appContext: null,
     };
 
     /**

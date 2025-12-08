@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+            font-size: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        /**
+         * ## 组件的 父子关系
+         */
+
+        // import {
+        //     h,
+        //     ref,
+        //     getCurrentInstance,
+        //     createApp,
+        //     onMounted,
+        //     useTemplateRef,
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            getCurrentInstance,
+            onMounted,
+            useTemplateRef,
+        } from '../../dist/vue.esm.js';
+
+        const Child = {
+            setup(props, { attrs, slots, emit, expose }) {
+
+                const cvm = getCurrentInstance();
+
+                console.log('父组件', cvm.parent)
+                console.log('子组件', cvm)
+
+                return () => {
+                    return h('div', {
+                        'data-content': '子组件'
+                    }, ["子组件"])
+                }
+            }
+        }
+
+        const Comp = {
+            setup(props) {
+                const vm = getCurrentInstance()
+
+                return () => {
+                    return h('div', {
+                        'data-content': "父组件",
+                    }, [
+                        h('p', { id: 'container' }, '父组件P元素'),
+                        h(Child)
+                    ])
+                }
+            }
+        }
+
+        const App = createApp(Comp, { msg: 'hello' })
+        App.mount('#app')
+
+    </script>
+</body>
+
+</html>

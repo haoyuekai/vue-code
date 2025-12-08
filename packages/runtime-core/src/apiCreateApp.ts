@@ -2,6 +2,14 @@ import { h } from './h';
 
 export function createAppAPI(render) {
     return function createApp(rootComponent, rootProps) {
+        /**
+         * eg:
+         */
+        const context = {
+            // 保存 app 后代组件使用 provide 注入的属性
+            provides: {},
+        };
+
         const app = {
             _container: null,
 
@@ -13,6 +21,9 @@ export function createAppAPI(render) {
                  */
 
                 const vnode = h(rootComponent, rootProps);
+
+                // 根组件绑定 appContext
+                vnode.appContext = context;
 
                 render(vnode, container);
 

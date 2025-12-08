@@ -8,11 +8,19 @@ import { initSlots } from './componentSlots';
  * 创建组件实例
  * @param vnode
  */
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
     const { type } = vnode;
+
+    // 根组件没有 parent 就用 vnode.appContext, 如果父组件存在，就用父组件的 appContext
+    const appContext = parent ? parent.appContext : vnode.appContext;
+
     const instance: any = {
         type,
         vnode,
+        // createApp 产生的 appContext
+        appContext,
+        // 父组件
+        parent,
         // 渲染函数
         render: null,
         // setup返回的状态
