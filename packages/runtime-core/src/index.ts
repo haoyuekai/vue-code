@@ -11,3 +11,4 @@ export * from './apiInject';
 
 // 组件
 export * from './components/Teleport';
+export * from './components/KeepAlive';

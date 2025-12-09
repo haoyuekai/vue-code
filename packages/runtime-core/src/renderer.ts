@@ -12,6 +12,7 @@ import { updateProps } from './componentProps';
 import { updateSlots } from './componentSlots';
 import { LifecycleHooks, triggerHooks } from './apiLifecycle';
 import { setRef } from './renderTemplateRef';
+import { isKeepAlive } from '@vue/runtime-dom';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -68,7 +69,14 @@ export function createRenderer(options) {
      * @param vnode
      */
     const unmount = vnode => {
-        const { el, shapeFlag, children, type, ref } = vnode;
+        const { el, shapeFlag, children, ref } = vnode;
+
+        if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+            // keep-alive 组件不卸载，但是要调用 KeepAlive 的 deactivate 方法停用
+            const parentComponent = vnode.component.parent;
+            parentComponent.ctx.deactivate(vnode);
+            return;
+        }
 
         if (shapeFlag & ShapeFlags.COMPONENT) {
             // 组件
@@ -577,10 +585,18 @@ export function createRenderer(options) {
      * @param vnode
      * @param container
      * @param anchor
+     * @param parentComponent
      */
     const mountComponent = (vnode, container, anchor, parentComponent) => {
         // 创建组件实例
         const instance = createComponentInstance(vnode, parentComponent);
+
+        if (isKeepAlive(vnode.type)) {
+            instance.ctx.renderer = {
+                options,
+                unmount,
+            };
+        }
 
         // 保存组件实例 到 虚拟节点，方便后续复用（对比 dom节点 保存 el）
         vnode.component = instance;
@@ -629,6 +645,12 @@ export function createRenderer(options) {
      */
     const processComponent = (n1, n2, container, anchor, parentComponent) => {
         if (n1 == null) {
+            if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+                // keep-alive 组件复用，不需要重新挂载, 通知 keep-alive 组件激活
+                parentComponent.ctx.activate(n2, container, anchor);
+                return;
+            }
+
             // 挂载
             mountComponent(n2, container, anchor, parentComponent);
         } else {

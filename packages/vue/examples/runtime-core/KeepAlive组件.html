@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #app {
+            padding: 24px;
+        }
+
+        .btn {
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        // import {
+        //     h,
+        //     ref,
+        //     createApp,
+        //     KeepAlive,
+        //     onMounted,
+        //     onUnmounted
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            KeepAlive,
+            onMounted,
+            onUnmounted
+        } from '../../dist/vue.esm.js';
+
+        const Comp1 = {
+            name: 'Comp1',
+            setup() {
+
+                onMounted(() => {
+                    console.log('挂载 组件1')
+                })
+                onUnmounted(() => {
+                    console.log('卸载 组件1')
+                })
+
+                return () => {
+                    return h('div', ["子组件1 ", h('input')])
+                }
+            }
+        }
+
+        const Comp2 = {
+            name: 'Comp2',
+            setup() {
+                onMounted(() => {
+                    console.log('挂载 组件2')
+                })
+                onUnmounted(() => {
+                    console.log('卸载 组件2')
+                })
+                return () => {
+                    return h('div', ["子组件2 ", h('input')])
+                }
+            }
+        }
+
+        const Comp3 = {
+            name: 'Comp3',
+            setup() {
+                onMounted(() => {
+                    console.log('挂载 组件3')
+                })
+                onUnmounted(() => {
+                    console.log('卸载 组件3')
+                })
+                return () => {
+                    return h('div', ["子组件3 ", h('input')])
+                }
+            }
+        }
+
+        const App = {
+            name: 'App',
+            setup() {
+                const components = [Comp1, Comp2, Comp3]
+
+                const index = ref(0)
+
+                function next() {
+                    index.value = index.value === 2 ? 0 : index.value + 1
+                }
+
+                function prev() {
+                    index.value = index.value === 0 ? 2 : index.value - 1
+                }
+
+                return () => {
+                    return h('div', [
+                        h('button', {
+                            class: 'btn',
+                            onClick: next,
+                        }, "下一个"),
+                        h('button', {
+                            class: 'btn',
+                            onClick: prev,
+                        }, "上一个"),
+                        h(KeepAlive, { max: 2 }, () => h(components[index.value]))
+                    ])
+                }
+            }
+        }
+
+        const app = createApp(App)
+        app.mount('#app')
+
+    </script>
+</body>
+
+</html>
