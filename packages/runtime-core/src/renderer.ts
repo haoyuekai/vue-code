@@ -69,7 +69,7 @@ export function createRenderer(options) {
      * @param vnode
      */
     const unmount = vnode => {
-        const { el, shapeFlag, children, ref } = vnode;
+        const { el, shapeFlag, children, ref, transition } = vnode;
 
         if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
             // keep-alive 组件不卸载，但是要调用 KeepAlive 的 deactivate 方法停用
@@ -91,8 +91,17 @@ export function createRenderer(options) {
 
             unmountChildren(children);
         }
-        // 移除之前挂载时dom
-        hostRemove(el);
+
+        const remove = () => {
+            // 移除之前挂载时dom
+            hostRemove(el);
+        };
+
+        if (transition) {
+            transition.leave?.(el, remove);
+        } else {
+            remove();
+        }
 
         if (ref != null) {
             setRef(ref, null);
@@ -124,7 +133,7 @@ export function createRenderer(options) {
      * @param anchor
      */
     const mountElement = (vnode, container, anchor, parentComponent) => {
-        const { type, props, children, shapeFlag } = vnode;
+        const { type, props, children, shapeFlag, transition } = vnode;
 
         // 创建dom元素
         const el = hostCreateElement(type);
@@ -148,8 +157,16 @@ export function createRenderer(options) {
             mountChildren(children, el, parentComponent);
         }
 
+        if (transition) {
+            transition.beforeEnter?.(el);
+        }
+
         // 把el插入到container中
         hostInsert(el, container, anchor);
+
+        if (transition) {
+            transition.enter?.(el);
+        }
     };
 
     /**
@@ -434,7 +451,7 @@ export function createRenderer(options) {
      * @param parentComponent
      */
     const processElement = (n1, n2, container, anchor, parentComponent) => {
-        if (n1 === null) {
+        if (n1 == null) {
             // 挂载
             mountElement(n2, container, anchor, parentComponent);
         } else {
@@ -514,7 +531,7 @@ export function createRenderer(options) {
                 patch(null, subTree, container, anchor, instance);
 
                 // 组件的 vnode 的 el 会指向 subTree 的 el
-                vnode.el = subTree.el;
+                vnode.el = subTree?.el;
 
                 // 保存子树
                 instance.subTree = subTree;
@@ -551,7 +568,7 @@ export function createRenderer(options) {
                 patch(prevSubTree, subTree, container, anchor, instance);
 
                 // 组件的 vnode 的 el 会指向 subTree 的 el
-                next.el = subTree.el;
+                next.el = subTree?.el;
 
                 // 保存子树
                 instance.subTree = subTree;
@@ -676,6 +693,11 @@ export function createRenderer(options) {
     ) => {
         if (n1 === n2) {
             // 如果两次传递了同一个虚拟节点，直接返回
+            return;
+        }
+
+        if (n1 && n2 == null) {
+            unmount(n1);
             return;
         }
 

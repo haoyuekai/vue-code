@@ -32,4 +32,4 @@ class LRUCache {
     }
 }
 
-const cache = new LRUCache(2);
+// const cache = new LRUCache(2);
