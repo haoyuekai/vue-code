@@ -15,6 +15,11 @@ import { isTeleport } from '@vue/runtime-dom';
 export const Text = Symbol('v-txt');
 
 /**
+ * Fragment 节点标记
+ */
+export const Fragment = Symbol('Fragment');
+
+/**
  * 判断两个节点是否是同一类型，决定节点是否可以复用（更新）
  * @param n1
  * @param n2

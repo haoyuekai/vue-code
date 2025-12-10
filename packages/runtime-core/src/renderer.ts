@@ -1,5 +1,5 @@
 import { ShapeFlags } from '@vue/shared';
-import { isSameVNodeType, normalizeVNode, Text } from './vnode';
+import { isSameVNodeType, normalizeVNode, Text, Fragment } from './vnode';
 import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
 import { ReactiveEffect } from '@vue/reactivity';
@@ -12,7 +12,7 @@ import { updateProps } from './componentProps';
 import { updateSlots } from './componentSlots';
 import { LifecycleHooks, triggerHooks } from './apiLifecycle';
 import { setRef } from './renderTemplateRef';
-import { isKeepAlive } from '@vue/runtime-dom';
+import { isKeepAlive } from './components/KeepAlive';
 
 /**
  * // 提供 将虚拟节点渲染到页面上的功能
@@ -69,12 +69,18 @@ export function createRenderer(options) {
      * @param vnode
      */
     const unmount = vnode => {
-        const { el, shapeFlag, children, ref, transition } = vnode;
+        const { el, shapeFlag, children, ref, transition, type } = vnode;
 
         if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
             // keep-alive 组件不卸载，但是要调用 KeepAlive 的 deactivate 方法停用
             const parentComponent = vnode.component.parent;
             parentComponent.ctx.deactivate(vnode);
+            return;
+        }
+
+        if (type === Fragment) {
+            // 卸载 Fragment
+            unmountChildren(children);
             return;
         }
 
@@ -93,8 +99,8 @@ export function createRenderer(options) {
         }
 
         const remove = () => {
-            // 移除之前挂载时dom
-            hostRemove(el);
+            // 移除之前挂载时dom (Fragment 没有 el)
+            el && hostRemove(el);
         };
 
         if (transition) {
@@ -677,6 +683,23 @@ export function createRenderer(options) {
     };
 
     /**
+     * Fragment 的挂载和更新
+     * @param n1
+     * @param n2
+     * @param container
+     * @param parentComponent
+     */
+    const processFragment = (n1, n2, container, parentComponent) => {
+        if (n1 == null) {
+            // 挂载
+            mountChildren(n2.children, container, parentComponent);
+        } else {
+            // 更新
+            patchChildren(n1, n2, container, parentComponent);
+        }
+    };
+
+    /**
      * 更新和挂载的方法
      * @param n1 老节点，如果有，表示要和 n2 做 diff 进行更新，没有则表示挂载
      * @param n2 新节点，
@@ -713,6 +736,7 @@ export function createRenderer(options) {
          * 节点类型
          * 元素
          * 文本
+         * Fragment
          * 组件
          */
         const { shapeFlag, type, ref } = n2;
@@ -720,6 +744,9 @@ export function createRenderer(options) {
         switch (type) {
             case Text:
                 processText(n1, n2, container, anchor);
+                break;
+            case Fragment:
+                processFragment(n1, n2, container, parentComponent);
                 break;
             default:
                 if (shapeFlag & ShapeFlags.ELEMENT) {
