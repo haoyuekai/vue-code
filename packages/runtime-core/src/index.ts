@@ -14,3 +14,6 @@ export * from './apiAsyncComponent';
 export * from './components/Teleport';
 export * from './components/KeepAlive';
 export * from './components/Transition';
+
+// 临时
+export * from '@vue/shared';

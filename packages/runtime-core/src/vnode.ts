@@ -96,8 +96,9 @@ function normalizeRef(ref) {
  * @param type 节点类型
  * @param props 节点属性
  * @param children 子节点
+ * @param patchFlag 更新标记
  */
-export function createVNode(type, props?, children = null) {
+export function createVNode(type, props?, children = null, patchFlag = 0) {
     let shapeFlag = 0;
 
     // 处理 type 上的 shapeFlag
@@ -128,6 +129,7 @@ export function createVNode(type, props?, children = null) {
         // 绑定 ref
         ref: normalizeRef(props?.ref),
         appContext: null,
+        patchFlag,
     };
 
     /**

@@ -1,4 +1,4 @@
-import { ShapeFlags } from '@vue/shared';
+import { PatchFlags, ShapeFlags } from '@vue/shared';
 import { isSameVNodeType, normalizeVNode, Text, Fragment } from './vnode';
 import { createAppAPI } from './apiCreateApp';
 import { createComponentInstance, setupComponent } from './component';
@@ -439,10 +439,33 @@ export function createRenderer(options) {
         // 复用dom，每次进来，把上一次的 el 保存到最新的虚拟节点上
         const el = (n2.el = n1.el);
 
-        // 更新 props
+        const { patchFlag } = n2;
+
         const oldProps = n1.props;
         const newProps = n2.props;
-        patchProps(el, oldProps, newProps);
+
+        if (patchFlag) {
+            if (patchFlag & PatchFlags.CLASS) {
+                // class 是动态的
+                hoostPatchProp(el, 'class', oldProps?.class, newProps?.class);
+            }
+
+            if (patchFlag & PatchFlags.STYLE) {
+                // style 是动态的
+                hoostPatchProp(el, 'style', oldProps?.style, newProps?.style);
+            }
+
+            if (patchFlag & PatchFlags.TEXT) {
+                // 子节点是文本且动态
+                if (n1.children !== n2.children) {
+                    hostSetElementText(el, n2.children);
+                }
+                return;
+            }
+        } else {
+            // 更新 props (props attrs slots events ....)
+            patchProps(el, oldProps, newProps);
+        }
 
         // 更新 children
         patchChildren(n1, n2, el, parentComponent);

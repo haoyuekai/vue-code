@@ -1,2 +1,3 @@
 export * from './utils';
-export * from './shapeFlag';
+export * from './shapeFlags';
+export * from './patchFlags';
