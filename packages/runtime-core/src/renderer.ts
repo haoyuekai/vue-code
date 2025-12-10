@@ -740,7 +740,22 @@ export function createRenderer(options) {
             // 挂载
             mountChildren(n2.children, container, parentComponent);
         } else {
+            const { patchFlag, dynamicChildren } = n2;
             // 更新
+            if (
+                dynamicChildren &&
+                n1.dynamicChildren &&
+                patchFlag & PatchFlags.STABLE_FRAGMENT
+            ) {
+                // 稳定的序列，会走动态子节点更新
+                patchBlockChildren(
+                    n1.dynamicChildren,
+                    dynamicChildren,
+                    container,
+                    parentComponent,
+                );
+                return;
+            }
             patchChildren(n1, n2, container, parentComponent);
         }
     };
@@ -760,7 +775,7 @@ export function createRenderer(options) {
         anchor = null,
         parentComponent = null,
     ) => {
-        if (n1 === n2) {
+        if (n1 == n2) {
             // 如果两次传递了同一个虚拟节点，直接返回
             return;
         }

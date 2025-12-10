@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #app {
+            padding: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        // import {
+        //     ref,
+        //     createApp,
+        //     createVNode,
+        //     openBlock,
+        //     createElementBlock,
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            PatchFlags,
+            ref,
+            createApp,
+            createVNode,
+            Fragment,
+            openBlock,
+            createElementBlock,
+            renderList,
+            toDisplayString,
+        } from '../../dist/vue.esm.js';
+
+        // 更新标记
+        // const pacthFlag = PatchFlags.TEXT
+        //     // | PatchFlags.CLASS
+        //     | PatchFlags.STYLE
+
+
+        const App = {
+            name: 'App',
+            setup() {
+                const list = ref(['a', 'b', 'c', 'd', 'e', 'f'])
+
+                setTimeout(() => {
+                    list.value = ['d', 'e']
+                }, 2000)
+
+                return () => {
+
+                    openBlock()
+                    const vnode = createElementBlock('div', null, [
+                        (openBlock(), createElementBlock(
+                            Fragment,
+                            null,
+                            renderList(list.value, item => {
+                                return (
+                                    openBlock(),
+                                    createElementBlock('div', { key: item }, item, 1)
+                                )
+                            }),
+                            // list.value.map(item => {
+                            //     return createVNode('div', { key: item }, item, 1)
+                            // }),
+                            128
+                        ))
+                        // ...list.value.map(item => {
+                        //     return createVNode('div', {
+                        //         key: item
+                        //     }, item, 1)
+                        // })
+                    ])
+
+                    console.log(vnode)
+
+                    return vnode
+                }
+            }
+        }
+
+        const app = createApp(App)
+        app.mount('#app')
+
+
+    </script>
+</body>
+
+</html>

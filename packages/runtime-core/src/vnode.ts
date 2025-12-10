@@ -7,7 +7,7 @@ import {
     ShapeFlags,
 } from '@vue/shared';
 import { getCurrentRenderingInstance } from './component';
-import { isTeleport } from '@vue/runtime-dom';
+import { isRef, isTeleport } from '@vue/runtime-dom';
 
 /**
  * 文本节点标记
@@ -188,4 +188,21 @@ export function createElementBlock(type, props?, children?, patchFlag?) {
     setupBlock(vnode);
 
     return vnode;
+}
+
+export function renderList(list, cb) {
+    return list.map(cb);
+}
+
+export function toDisplayString(val) {
+    if (isString(val)) return val;
+    if (val == null) return '';
+    if (isRef(val)) {
+        return toDisplayString(val.value);
+    }
+    if (typeof val === 'object') {
+        return JSON.stringify(val);
+    }
+
+    return String(val);
 }
