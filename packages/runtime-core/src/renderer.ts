@@ -439,7 +439,7 @@ export function createRenderer(options) {
         // 复用dom，每次进来，把上一次的 el 保存到最新的虚拟节点上
         const el = (n2.el = n1.el);
 
-        const { patchFlag } = n2;
+        const { patchFlag, dynamicChildren } = n2;
 
         const oldProps = n1.props;
         const newProps = n2.props;
@@ -467,8 +467,31 @@ export function createRenderer(options) {
             patchProps(el, oldProps, newProps);
         }
 
-        // 更新 children
-        patchChildren(n1, n2, el, parentComponent);
+        if (dynamicChildren && n1.dynamicChildren) {
+            // 只需要更新动态节点
+            patchBlockChildren(
+                n1.dynamicChildren,
+                dynamicChildren,
+                el,
+                parentComponent,
+            );
+        } else {
+            // 更新 children 全量 diff
+            patchChildren(n1, n2, el, parentComponent);
+        }
+    };
+
+    /**
+     * 更新当前 block 动态子节点
+     * @param c1 => n1.dynamicChildren
+     * @param c2 => n2.dynamicChildren,
+     * @param container
+     * @param parentComponent
+     */
+    const patchBlockChildren = (c1, c2, container, parentComponent) => {
+        for (let i = 0; i < c2.length; i++) {
+            patch(c1[i], c2[i], container, null, parentComponent);
+        }
     };
 
     /**
