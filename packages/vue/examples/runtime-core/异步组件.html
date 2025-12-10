@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #app {
+            padding: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        // import {
+        //     h,
+        //     ref,
+        //     createApp,
+        //     defineAsyncComponent
+        // } from '../../../../node_modules/vue/dist/vue.esm-browser.js';
+        import {
+            h,
+            ref,
+            createApp,
+            defineAsyncComponent
+        } from '../../dist/vue.esm.js';
+
+
+
+        const App = {
+            name: 'App',
+            setup() {
+
+                const component = defineAsyncComponent({
+                    loader: () => {
+                        /**
+                         * 加载异步组件
+                         */
+                        // return import('./js/asyncComponent.js')
+                        return new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                                // resolve(import('./js/asyncComponent.js'))
+                                resolve({
+                                    props: ['msg'],
+                                    setup(props) {
+                                        return () => {
+                                            return h('div', `${props.msg} 异步组件`)
+                                        }
+                                    }
+                                })
+
+                                // reject('组件加载失败')
+                            }, 3000)
+                        })
+                    },
+                    timeout: 4000,
+                    loadingComponent: {
+                        render() {
+                            return h('div', 'loading...')
+                        }
+                    },
+                    errorComponent: {
+                        render() {
+                            return h('div', '组件加载失败')
+                        }
+                    }
+                })
+
+                return () => {
+                    return h(component, { msg: 'Hello world' })
+                }
+            }
+        }
+
+        const app = createApp(App)
+        app.mount('#app')
+
+    </script>
+</body>
+
+</html>
