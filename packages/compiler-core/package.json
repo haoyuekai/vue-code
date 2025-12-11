@@ -1,0 +1,21 @@
+{
+  "name": "@vue/compiler-core",
+  "version": "1.0.0",
+  "description": "编译时",
+  "main": "index.js",
+  "module": "dist/compiler-core.esm.js",
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "sideEffects": false,
+  "buildOptions": {
+    "name": "MiniVueCompilerCore",
+    "formats": [
+      "cjs",
+      "esm-bundler",
+      "esm-browser",
+      "global"
+    ]
+  }
+}

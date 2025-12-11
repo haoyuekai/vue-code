@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.js vue --format esm",
-    "dev2": "node scripts/dev.js reactivity --format esm",
+    "dev2": "node scripts/dev.js compiler-core --format esm",
     "build": "node scripts/build.js"
   },
   "keywords": [],
@@ -19,5 +19,8 @@
     "prettier": "^3.7.1",
     "typescript": "^5.9.3",
     "vue": "^3.5.25"
+  },
+  "dependencies": {
+    "@vue/compiler-dom": "^3.5.25"
   }
 }

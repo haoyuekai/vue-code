@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@vue/compiler-dom':
+        specifier: ^3.5.25
+        version: 3.5.25
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
