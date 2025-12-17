@@ -1,5 +1,5 @@
 import { NodeTypes } from './ast';
-import { Tokenizer } from './tokenizer';
+import { isWhitespace, Tokenizer } from './tokenizer';
 
 /**
  * 当前正在处理的字符串
@@ -15,6 +15,11 @@ let currentRoot;
  * 当前正在解析的 标签
  */
 let currentOpenTag;
+
+/**
+ * 当前正在解析的属性
+ */
+let currentProp;
 
 function getSlice(start, end) {
     return currentInput.slice(start, end);
@@ -45,6 +50,7 @@ function setLocEnd(loc, end) {
 }
 
 const tokenizer = new Tokenizer({
+    // 文本节点完成
     ontext(start, end) {
         const content = getSlice(start, end);
         const textNode = {
@@ -54,6 +60,7 @@ const tokenizer = new Tokenizer({
         };
         addNode(textNode);
     },
+    // 开始标签名
     onopentagname(start, end) {
         const tag = getSlice(start, end);
         // 提升 currentOpenTag 作用域，后续操作使用
@@ -61,14 +68,17 @@ const tokenizer = new Tokenizer({
             type: NodeTypes.ELEMENT,
             tag,
             children: [],
+            // 标签未闭合，暂不准确
             loc: getLoc(start - 1, end),
         };
     },
+    // 开始标签完成
     onopentagend() {
         addNode(currentOpenTag);
         stack.push(currentOpenTag);
         currentOpenTag = null;
     },
+    // 闭合标签
     onclosetag(start, end) {
         const tag = getSlice(start, end);
         const lastNode = stack.pop();
@@ -77,6 +87,52 @@ const tokenizer = new Tokenizer({
         } else {
             // throw new Error('错误的标签');
         }
+    },
+    // 属性名完成
+    onattrname(start, end) {
+        currentProp = {
+            type: NodeTypes.ATTRIBUTE,
+            name: getSlice(start, end),
+            // 未解析完属性值，暂不准确
+            loc: getLoc(start, end),
+            value: undefined,
+        };
+    },
+    // 属性值
+    onattrvalue(start, end) {
+        const value = getSlice(start, end);
+        currentProp.value = value;
+        setLocEnd(currentProp.loc, end);
+        if (currentOpenTag) {
+            if (!currentOpenTag.props) {
+                currentOpenTag.props = [];
+            }
+            currentOpenTag.props.push(currentProp);
+            currentProp = null;
+        }
+    },
+    // 插值表达式
+    oninterpolation(start, end) {
+        let innerStart = start + 2;
+        let innerEnd = end - 2;
+
+        // 剔除插值表达式的空格
+        while (isWhitespace(currentInput.charCodeAt(innerStart))) {
+            innerStart++;
+        }
+        while (isWhitespace(currentInput.charCodeAt(innerEnd - 1))) {
+            innerEnd--;
+        }
+
+        addNode({
+            type: NodeTypes.INTERPOLATION,
+            loc: getLoc(start, end),
+            content: {
+                type: NodeTypes.SIMPLE_EXPRESSION, // 简单表达式
+                content: getSlice(innerStart, innerEnd),
+                loc: getLoc(innerStart, innerEnd),
+            },
+        });
     },
 });
 
