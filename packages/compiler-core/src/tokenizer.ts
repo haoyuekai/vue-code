@@ -149,6 +149,11 @@ export class Tokenizer {
      */
     buffer = '';
 
+    /**
+     * 保存所有换行符的位置
+     */
+    newlines = [];
+
     constructor(public cbs) {}
 
     parse(input: string) {
@@ -156,6 +161,10 @@ export class Tokenizer {
 
         while (this.index < this.buffer.length) {
             const c = this.buffer.charCodeAt(this.index);
+            // 保存所有换行符的下标
+            if (c === CharCodes.NewLine && this.state !== State.InEntity) {
+                this.newlines.push(this.index);
+            }
 
             /**
              * 状态机
@@ -400,9 +409,22 @@ export class Tokenizer {
      * @param index
      */
     getPos(index) {
+        let column = index + 1;
+        let line = 1;
+
+        // 换行
+        for (let i = this.newlines.length - 1; i >= 0; i--) {
+            const newlinesIndex = this.newlines[i];
+            if (index > newlinesIndex) {
+                line = i + 2; // 行
+                column = index - newlinesIndex; // 列
+                break;
+            }
+        }
+
         return {
-            column: index + 1, // 列号
-            line: 1, // 行号 TODO:暂不考虑换行
+            column, // 列号
+            line, // 行号
             offset: index, // 偏移量
         };
     }

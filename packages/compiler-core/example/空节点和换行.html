@@ -18,12 +18,14 @@
             <div>
                 <span>
                     {{ msg }}
+
+                    {{ msg }}
                 </span>
             </div>
         `
 
-        console.log('自己的', parse(temp).children)
-        console.log('官方的', vueParse(temp).children)
+        console.log('自己的', parse(temp))
+        console.log('官方的', vueParse(temp))
 
     </script>
 </body>

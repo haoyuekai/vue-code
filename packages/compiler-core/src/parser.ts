@@ -49,6 +49,36 @@ function setLocEnd(loc, end) {
     loc.end = tokenizer.getPos(end + 1);
 }
 
+function isAllWhitespace(str) {
+    for (let i = 0; i < str.length; i++) {
+        if (!isWhitespace(str.charCodeAt(i))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function condenseWhitespace(children) {
+    const _children = [...children];
+    for (let i = 0; i < _children.length; i++) {
+        const node = _children[i];
+        if (node.type === NodeTypes.TEXT) {
+            // 文本节点
+            if (isAllWhitespace(node.content)) {
+                if (i === 0 || i === _children.length - 1) {
+                    // 剔除两端的空白字符
+                    _children[i] = null;
+                } else {
+                    // 中间部分，压缩所有的空白字符
+                    node.content = ' ';
+                }
+            }
+        }
+    }
+
+    return _children.filter(Boolean);
+}
+
 const tokenizer = new Tokenizer({
     // 文本节点完成
     ontext(start, end) {
@@ -87,6 +117,9 @@ const tokenizer = new Tokenizer({
         } else {
             // throw new Error('错误的标签');
         }
+
+        // 去除空字符
+        lastNode.children = condenseWhitespace(lastNode.children);
     },
     // 属性名完成
     onattrname(start, end) {
@@ -149,6 +182,7 @@ function createRoot(source) {
         type: NodeTypes.ROOT,
         // 初始化的字符串
         source,
+        loc: null,
     };
 }
 
@@ -163,6 +197,10 @@ export function parse(input) {
      * 开始解析 input
      */
     tokenizer.parse(input);
+
+    root.loc = getLoc(0, input.length);
+
+    root.children = condenseWhitespace(root.children);
 
     return root;
 }
